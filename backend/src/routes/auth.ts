@@ -89,3 +89,51 @@ authRouter.get('/perfil', requiereAuth, async (_req, res) => {
   }
   res.json(tutor);
 });
+// POST /auth/logout → quita el token push del dispositivo (HU02)
+authRouter.post('/logout', requiereAuth, async (req, res) => {
+  const { token_push } = req.body ?? {};
+
+  if (typeof token_push === 'string' && token_push !== '') {
+    await Tutor.updateOne({ _id: res.locals.tutorId }, { $pull: { tokens_push: token_push } });
+  }
+
+  res.json({ mensaje: 'Sesión cerrada' });
+});
+
+// PATCH /auth/perfil → edita teléfono y contacto alterno (HU04)
+authRouter.patch('/perfil', requiereAuth, async (req, res) => {
+  const { telefono, contacto_alterno } = req.body ?? {};
+  const cambios: { telefono?: string; contacto_alterno?: string } = {};
+  const borrar: { contacto_alterno?: '' } = {};
+
+  if (telefono !== undefined) {
+    if (typeof telefono !== 'string' || !TELEFONO_REGEX.test(telefono)) {
+      res.status(400).json({ error: 'El teléfono no es válido (ejemplo: +56912345678)' });
+      return;
+    }
+    cambios.telefono = telefono;
+  }
+
+  if (contacto_alterno !== undefined) {
+    if (contacto_alterno === '' || contacto_alterno === null) {
+      borrar.contacto_alterno = ''; // enviar vacío = quitar el contacto alterno
+    } else if (typeof contacto_alterno !== 'string' || !TELEFONO_REGEX.test(contacto_alterno)) {
+      res.status(400).json({ error: 'El contacto alterno no es válido (ejemplo: +56987654321)' });
+      return;
+    } else {
+      cambios.contacto_alterno = contacto_alterno;
+    }
+  }
+
+  const tutor = await Tutor.findByIdAndUpdate(
+    res.locals.tutorId,
+    { $set: cambios, $unset: borrar },
+    { new: true }
+  );
+
+  if (!tutor) {
+    res.status(404).json({ error: 'Tutor no encontrado' });
+    return;
+  }
+  res.json(tutor);
+});
