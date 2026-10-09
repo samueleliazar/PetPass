@@ -3,7 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { razasRouter } from './routes/razas'; // NUEVO
 import { authRouter } from './routes/auth';
-
+import { mascotasRouter } from './routes/mascotas';
 const app = express();
 const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -17,6 +17,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/razas', razasRouter); // NUEVO: todas las rutas de razas parten con /razas
 app.use('/auth', authRouter);
+app.use('/mascotas', mascotasRouter);
 async function iniciar() {
   if (!MONGODB_URI) {
     console.error('Falta MONGODB_URI en el archivo .env');
