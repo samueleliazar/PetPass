@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { Tutor } from '../models/Tutor';
+import jwt from 'jsonwebtoken';
+import { requiereAuth } from '../middleware/auth';
 
 export const authRouter = Router();
 
@@ -44,4 +46,46 @@ authRouter.post('/registro', async (req, res) => {
     telefono: tutor.telefono,
     fecha_registro: tutor.fecha_registro,
   });
+});
+// POST /auth/login → verifica credenciales y entrega un token (HU02)
+authRouter.post('/login', async (req, res) => {
+  const { email, password, token_push } = req.body ?? {};
+
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    res.status(400).json({ error: 'Debes ingresar correo y contraseña' });
+    return;
+  }
+
+  // Pedimos explícitamente el hash, porque en el modelo está oculto
+  const tutor = await Tutor.findOne({ email: email.toLowerCase().trim() }).select('+password_hash');
+  const correcta = tutor ? await bcrypt.compare(password, tutor.password_hash) : false;
+
+  if (!tutor || !correcta) {
+    res.status(401).json({ error: 'Correo o contraseña incorrectos' });
+    return;
+  }
+
+  // HU02: al iniciar sesión se registra el token push del dispositivo (si viene)
+  if (typeof token_push === 'string' && token_push !== '') {
+    await Tutor.updateOne({ _id: tutor._id }, { $addToSet: { tokens_push: token_push } });
+  }
+
+  const token = jwt.sign({ id: tutor._id.toString() }, process.env.JWT_SECRET as string, {
+    expiresIn: '7d',
+  });
+
+  res.json({
+    token,
+    tutor: { id: tutor._id, nombre_completo: tutor.nombre_completo, email: tutor.email },
+  });
+});
+
+// GET /auth/perfil → datos del tutor que inició sesión (ruta privada)
+authRouter.get('/perfil', requiereAuth, async (_req, res) => {
+  const tutor = await Tutor.findById(res.locals.tutorId);
+  if (!tutor) {
+    res.status(404).json({ error: 'Tutor no encontrado' });
+    return;
+  }
+  res.json(tutor);
 });
