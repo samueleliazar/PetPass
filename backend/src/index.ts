@@ -1,15 +1,20 @@
 import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
+import { razasRouter } from './routes/razas'; // NUEVO
 
 const app = express();
 const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
+app.use(express.json()); // NUEVO: permite recibir datos en formato JSON
+
 app.get('/health', (_req, res) => {
   const db = mongoose.connection.readyState === 1 ? 'conectada' : 'desconectada';
   res.json({ estado: 'ok', db });
 });
+
+app.use('/razas', razasRouter); // NUEVO: todas las rutas de razas parten con /razas
 
 async function iniciar() {
   if (!MONGODB_URI) {
