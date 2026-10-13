@@ -221,7 +221,7 @@ function textoOpcional(valor: unknown): boolean {
   return valor === undefined || typeof valor === 'string';
 }
 
-// POST /mascotas/:id/eventos → agrega un registro al historial clínico (HU07)
+// POST /mascotas/:id/eventos → agrega un registro al historial clínico (HU07, HU08)
 mascotasRouter.post('/:id/eventos', async (req, res) => {
   const { id } = req.params;
   if (!isValidObjectId(id)) {
@@ -235,26 +235,50 @@ mascotasRouter.post('/:id/eventos', async (req, res) => {
     return;
   }
 
-  const { tipo_registro, nombre, fecha_evento, descripcion, dosis, veterinario, fecha_proxima_dosis } =
-    req.body ?? {};
+  const {
+    tipo_registro,
+    nombre,
+    fecha_evento,
+    descripcion,
+    dosis,
+    veterinario,
+    fecha_proxima_dosis,
+    peso_kg,
+  } = req.body ?? {};
 
   if (typeof tipo_registro !== 'string' || !TIPOS_REGISTRO.includes(tipo_registro)) {
     res.status(400).json({ error: `Tipo no válido. Opciones: ${TIPOS_REGISTRO.join(', ')}` });
     return;
   }
-  if (typeof nombre !== 'string' || nombre.trim() === '') {
+  const esPeso = tipo_registro === 'Peso';
+
+  // Nombre obligatorio, salvo en Peso, donde por defecto se llama "Peso"
+  let nombreFinal = typeof nombre === 'string' ? nombre.trim() : '';
+  if (esPeso && nombreFinal === '') nombreFinal = 'Peso';
+  if (nombreFinal === '') {
     res.status(400).json({ error: 'El nombre es obligatorio (por ejemplo: Antirrábica)' });
     return;
   }
 
-  // HU07: la fecha de aplicación no puede ser futura
+  // HU07: la fecha no puede ser futura
   const fecha = new Date(fecha_evento);
   if (typeof fecha_evento !== 'string' || isNaN(fecha.getTime())) {
     res.status(400).json({ error: 'Fecha no válida (formato AAAA-MM-DD)' });
     return;
   }
   if (fecha > new Date()) {
-    res.status(400).json({ error: 'La fecha de aplicación no puede ser futura' });
+    res.status(400).json({ error: 'La fecha no puede ser futura' });
+    return;
+  }
+
+  // HU08: el peso solo se usa en registros de tipo Peso, y ahí es obligatorio
+  if (esPeso) {
+    if (typeof peso_kg !== 'number' || peso_kg <= 0 || peso_kg > 1000) {
+      res.status(400).json({ error: 'Para un registro de Peso, peso_kg debe ser un número mayor a 0' });
+      return;
+    }
+  } else if (peso_kg !== undefined) {
+    res.status(400).json({ error: 'peso_kg solo se usa en registros de tipo Peso' });
     return;
   }
 
@@ -273,33 +297,47 @@ mascotasRouter.post('/:id/eventos', async (req, res) => {
     return;
   }
 
-  // HU07: la próxima dosis es opcional, pero si viene debe ser posterior a la aplicación
+  // Próxima dosis: opcional, posterior a la fecha, y no aplica a Peso
   let proxima: Date | null = null;
   if (fecha_proxima_dosis !== undefined && fecha_proxima_dosis !== null && fecha_proxima_dosis !== '') {
+    if (esPeso) {
+      res.status(400).json({ error: 'Un registro de Peso no tiene próxima dosis' });
+      return;
+    }
     proxima = new Date(fecha_proxima_dosis);
     if (typeof fecha_proxima_dosis !== 'string' || isNaN(proxima.getTime())) {
       res.status(400).json({ error: 'Fecha de próxima dosis no válida (formato AAAA-MM-DD)' });
       return;
     }
     if (proxima <= fecha) {
-      res.status(400).json({ error: 'La próxima dosis debe ser posterior a la fecha de aplicación' });
+      res.status(400).json({ error: 'La próxima dosis debe ser posterior a la fecha del registro' });
       return;
+    }
+  }
+
+  // HU08: si es el peso más reciente, actualiza el peso actual de la mascota
+  if (esPeso) {
+    const hayPesoMasNuevo = mascota.eventos_clinicos.some(
+      (e) => e.tipo_registro === 'Peso' && e.fecha_evento > fecha
+    );
+    if (!hayPesoMasNuevo) {
+      mascota.set('peso_actual', peso_kg);
     }
   }
 
   mascota.eventos_clinicos.push({
     tipo_registro,
-    nombre: nombre.trim(),
+    nombre: nombreFinal,
     fecha_evento: fecha,
     descripcion,
     dosis,
     veterinario,
-    origen: 'Manual', // HU07: siempre Manual cuando lo ingresa el tutor
+    origen: 'Manual',
     fecha_proxima_dosis: proxima,
+    peso_kg: esPeso ? peso_kg : undefined,
   });
   await mascota.save();
 
-  // Devolvemos el evento recién agregado (el último de la lista)
   const evento = mascota.eventos_clinicos[mascota.eventos_clinicos.length - 1];
   res.status(201).json(evento);
 });

@@ -17,6 +17,7 @@ const eventoClinicoSchema = new Schema({
   },
   origen: { type: String, enum: ['Manual', 'OCR'], required: true, default: 'Manual' },
   fecha_proxima_dosis: { type: Date, default: null },
+  peso_kg: { type: Number, min: 0 },
 });
 
 const mascotaSchema = new Schema(
