@@ -377,3 +377,52 @@ mascotasRouter.get('/:id/eventos', async (req, res) => {
 
   res.json({ total: eventos.length, eventos });
 });
+
+// GET /mascotas/:id/eventos/por-clinica → historial agrupado por clínica (HU33)
+mascotasRouter.get('/:id/eventos/por-clinica', async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(404).json({ error: 'Mascota no encontrada' });
+    return;
+  }
+
+  const mascota = await Mascota.findOne({ _id: id, id_tutor: res.locals.tutorId }).select(
+    'eventos_clinicos'
+  );
+  if (!mascota) {
+    res.status(404).json({ error: 'Mascota no encontrada' });
+    return;
+  }
+
+  const SIN_CLINICA = 'Sin clínica registrada';
+  const lista = mascota.toObject().eventos_clinicos;
+  type Evento = (typeof lista)[number];
+
+  // Agrupa por nombre de clínica, sin distinguir mayúsculas ni espacios sobrantes
+  const grupos = new Map<string, { clinica: string; eventos: Evento[] }>();
+  for (const evento of lista) {
+    const nombre = evento.veterinario?.clinica?.trim() || SIN_CLINICA;
+    const clave = nombre.toLowerCase();
+    if (!grupos.has(clave)) grupos.set(clave, { clinica: nombre, eventos: [] });
+    grupos.get(clave)!.eventos.push(evento);
+  }
+
+  const resultado = [...grupos.values()]
+    .map((grupo) => {
+      grupo.eventos.sort((a, b) => b.fecha_evento.getTime() - a.fecha_evento.getTime());
+      return {
+        clinica: grupo.clinica,
+        total: grupo.eventos.length,
+        ultima_atencion: grupo.eventos[0].fecha_evento,
+        eventos: grupo.eventos,
+      };
+    })
+    // Clínicas con atención más reciente primero; "Sin clínica" siempre al final
+    .sort((a, b) => {
+      if (a.clinica === SIN_CLINICA) return 1;
+      if (b.clinica === SIN_CLINICA) return -1;
+      return b.ultima_atencion.getTime() - a.ultima_atencion.getTime();
+    });
+
+  res.json(resultado);
+});
