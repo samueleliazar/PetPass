@@ -341,3 +341,39 @@ mascotasRouter.post('/:id/eventos', async (req, res) => {
   const evento = mascota.eventos_clinicos[mascota.eventos_clinicos.length - 1];
   res.status(201).json(evento);
 });
+
+// GET /mascotas/:id/eventos → historial ordenado y filtrable (HU09)
+// Ejemplos: /mascotas/ID/eventos  |  /mascotas/ID/eventos?tipo=Vacuna
+mascotasRouter.get('/:id/eventos', async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res.status(404).json({ error: 'Mascota no encontrada' });
+    return;
+  }
+
+  const { tipo } = req.query;
+  if (tipo !== undefined && (typeof tipo !== 'string' || !TIPOS_REGISTRO.includes(tipo))) {
+    res.status(400).json({ error: `Tipo no válido. Opciones: ${TIPOS_REGISTRO.join(', ')}` });
+    return;
+  }
+
+  // Solo traemos el historial, no toda la ficha
+  const mascota = await Mascota.findOne({ _id: id, id_tutor: res.locals.tutorId }).select(
+    'eventos_clinicos'
+  );
+  if (!mascota) {
+    res.status(404).json({ error: 'Mascota no encontrada' });
+    return;
+  }
+
+  const eventos = mascota
+    .toObject()
+    .eventos_clinicos.filter((e) => !tipo || e.tipo_registro === tipo)
+    .sort((a, b) => {
+      // Más reciente primero; si tienen la misma fecha, el último registrado primero
+      const porFecha = b.fecha_evento.getTime() - a.fecha_evento.getTime();
+      return porFecha !== 0 ? porFecha : b._id.toString().localeCompare(a._id.toString());
+    });
+
+  res.json({ total: eventos.length, eventos });
+});
