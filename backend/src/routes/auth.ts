@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import { Tutor } from '../models/Tutor';
 import jwt from 'jsonwebtoken';
 import { requiereAuth } from '../middleware/auth';
+import { isValidObjectId } from 'mongoose';
+import { enviarCorreo } from '../config/correo';
 
 export const authRouter = Router();
 
@@ -136,4 +138,90 @@ authRouter.patch('/perfil', requiereAuth, async (req, res) => {
     return;
   }
   res.json(tutor);
+});
+
+const MENSAJE_RECUPERAR =
+  'Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña';
+const ENLACE_INVALIDO = 'El enlace no es válido o ya expiró. Solicita uno nuevo.';
+
+// POST /auth/recuperar → envía el enlace de recuperación al correo (HU03)
+authRouter.post('/recuperar', async (req, res) => {
+  const { email } = req.body ?? {};
+  if (typeof email !== 'string' || !EMAIL_REGEX.test(email)) {
+    res.status(400).json({ error: 'El correo no es válido' });
+    return;
+  }
+
+  const tutor = await Tutor.findOne({ email: email.toLowerCase().trim() }).select('+password_hash');
+
+  // Misma respuesta exista o no el correo: así nadie averigua quién está registrado
+  if (!tutor) {
+    res.json({ mensaje: MENSAJE_RECUPERAR });
+    return;
+  }
+
+  // Firmado con la clave + el hash actual: al cambiar la contraseña, el enlace muere solo
+  const token = jwt.sign(
+    { id: tutor._id.toString(), tipo: 'reset' },
+    (process.env.JWT_SECRET as string) + tutor.password_hash,
+    { expiresIn: '30m' }
+  );
+  const enlace = `${process.env.APP_URL ?? 'http://localhost:3000'}/restablecer?token=${token}`;
+
+  try {
+    await enviarCorreo(
+      tutor.email,
+      'Recupera tu contraseña de PetPass',
+      `<p>Hola ${tutor.nombre_completo}:</p>
+       <p>Para crear una nueva contraseña, abre este enlace (vence en 30 minutos):</p>
+       <p><a href="${enlace}">${enlace}</a></p>
+       <p>Si no lo solicitaste, ignora este correo.</p>`
+    );
+  } catch (error) {
+    console.error('Error al enviar correo de recuperación:', error);
+    res.status(500).json({ error: 'No se pudo enviar el correo. Intenta más tarde.' });
+    return;
+  }
+
+  res.json({ mensaje: MENSAJE_RECUPERAR });
+});
+
+// POST /auth/restablecer → cambia la contraseña usando el token del correo (HU03)
+authRouter.post('/restablecer', async (req, res) => {
+  const { token, password } = req.body ?? {};
+
+  if (typeof token !== 'string' || typeof password !== 'string') {
+    res.status(400).json({ error: 'Debes enviar el token y la nueva contraseña' });
+    return;
+  }
+  if (password.length < 8) {
+    res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
+    return;
+  }
+
+  // Primero leemos el token SIN verificarlo, solo para saber de qué tutor es
+  const datos = jwt.decode(token) as { id?: string; tipo?: string } | null;
+  if (!datos?.id || datos.tipo !== 'reset' || !isValidObjectId(datos.id)) {
+    res.status(400).json({ error: ENLACE_INVALIDO });
+    return;
+  }
+
+  const tutor = await Tutor.findById(datos.id).select('+password_hash');
+  if (!tutor) {
+    res.status(400).json({ error: ENLACE_INVALIDO });
+    return;
+  }
+
+  // Ahora sí verificamos firma y expiración con la clave + el hash ACTUAL
+  try {
+    jwt.verify(token, (process.env.JWT_SECRET as string) + tutor.password_hash);
+  } catch {
+    res.status(400).json({ error: ENLACE_INVALIDO });
+    return;
+  }
+
+  tutor.password_hash = await bcrypt.hash(password, 10);
+  await tutor.save();
+
+  res.json({ mensaje: 'Contraseña actualizada. Ya puedes iniciar sesión.' });
 });
