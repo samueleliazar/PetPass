@@ -1,6 +1,24 @@
 import { Schema, model } from 'mongoose';
 import { ESPECIES } from './Raza';
 
+export const TIPOS_REGISTRO = ['Vacuna', 'Tratamiento', 'Receta', 'Peso', 'Control'];
+
+// Subdocumento: cada elemento del historial clínico
+const eventoClinicoSchema = new Schema({
+  id_documento: { type: Schema.Types.ObjectId, ref: 'Documento', default: null },
+  tipo_registro: { type: String, enum: TIPOS_REGISTRO, required: true },
+  nombre: { type: String, required: true, trim: true },
+  fecha_evento: { type: Date, required: true },
+  descripcion: { type: String, trim: true },
+  dosis: { type: String, trim: true },
+  veterinario: {
+    nombre: { type: String, trim: true },
+    clinica: { type: String, trim: true },
+  },
+  origen: { type: String, enum: ['Manual', 'OCR'], required: true, default: 'Manual' },
+  fecha_proxima_dosis: { type: Date, default: null },
+});
+
 const mascotaSchema = new Schema(
   {
     id_tutor: { type: Schema.Types.ObjectId, ref: 'Tutor', required: true, index: true },
@@ -23,6 +41,7 @@ const mascotaSchema = new Schema(
     },
     estado_extraviado: { type: Boolean, default: false },
     id_alerta_activa: { type: Schema.Types.ObjectId, ref: 'Alerta_Extravio', default: null },
+        eventos_clinicos: { type: [eventoClinicoSchema], default: [] },
   },
   {
     collection: 'Mascota',
