@@ -4,11 +4,13 @@ import mongoose from 'mongoose';
 import { razasRouter } from './routes/razas'; // NUEVO
 import { authRouter } from './routes/auth';
 import { mascotasRouter } from './routes/mascotas';
+import { recordatoriosRouter } from './routes/recordatorios';
 const app = express();
 const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
 app.use(express.json()); // NUEVO: permite recibir datos en formato JSON
+app.use('/recordatorios', recordatoriosRouter);
 
 app.get('/health', (_req, res) => {
   const db = mongoose.connection.readyState === 1 ? 'conectada' : 'desconectada';

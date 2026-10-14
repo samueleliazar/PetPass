@@ -3,6 +3,7 @@ import mongoose, { isValidObjectId, Types } from 'mongoose';
 import { Mascota, TIPOS_REGISTRO } from '../models/Mascota';
 import { Raza, ESPECIES } from '../models/Raza';
 import { requiereAuth } from '../middleware/auth';
+import { sincronizarRecordatorioDeEvento, eliminarRecordatorioDeEvento } from '../services/recordatorios';
 
 export const mascotasRouter = Router();
 
@@ -339,7 +340,9 @@ mascotasRouter.post('/:id/eventos', async (req, res) => {
   await mascota.save();
 
   const evento = mascota.eventos_clinicos[mascota.eventos_clinicos.length - 1];
+  await sincronizarRecordatorioDeEvento(mascota, evento);
   res.status(201).json(evento);
+  
 });
 
 // GET /mascotas/:id/eventos → historial ordenado y filtrable (HU09)
@@ -576,6 +579,7 @@ mascotasRouter.patch('/:id/eventos/:eventoId', async (req, res) => {
   if (esPeso) recalcularPesoActual(mascota);
 
   await mascota.save();
+  await sincronizarRecordatorioDeEvento(mascota, evento);
   res.json(evento);
 });
 
@@ -597,7 +601,7 @@ mascotasRouter.delete('/:id/eventos/:eventoId', async (req, res) => {
   if (eraPeso) recalcularPesoActual(mascota);
   await mascota.save();
 
-  // Pendiente HU15: cuando existan los recordatorios, borrar también el asociado a este registro
+  await eliminarRecordatorioDeEvento(evento._id);
 
   res.json({ mensaje: 'Registro eliminado del historial' });
 });
