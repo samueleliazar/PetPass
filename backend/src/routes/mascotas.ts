@@ -426,3 +426,178 @@ mascotasRouter.get('/:id/eventos/por-clinica', async (req, res) => {
 
   res.json(resultado);
 });
+
+// ---------- Edición y borrado de registros del historial ----------
+
+type MascotaDoc = NonNullable<Awaited<ReturnType<typeof Mascota.findOne>>>;
+
+// Busca la mascota del tutor y, dentro de ella, el registro del historial
+async function obtenerMascotaYEvento(idMascota: string, idEvento: string, tutorId: string) {
+  if (!isValidObjectId(idMascota) || !isValidObjectId(idEvento)) return null;
+
+  const mascota = await Mascota.findOne({ _id: idMascota, id_tutor: tutorId });
+  if (!mascota) return null;
+
+  const evento = mascota.eventos_clinicos.id(idEvento);
+  if (!evento) return null;
+
+  return { mascota, evento };
+}
+
+// Deja en peso_actual el peso más reciente del historial (si hay alguno)
+function recalcularPesoActual(mascota: MascotaDoc) {
+  const pesos = mascota.eventos_clinicos.filter(
+    (e) => e.tipo_registro === 'Peso' && e.peso_kg != null
+  );
+  if (pesos.length === 0) return; // sin pesos en el historial: se mantiene el valor actual
+  const masReciente = pesos.reduce((a, b) => (b.fecha_evento > a.fecha_evento ? b : a));
+  mascota.set('peso_actual', masReciente.peso_kg);
+}
+
+// PATCH /mascotas/:id/eventos/:eventoId → edita un registro del historial
+mascotasRouter.patch('/:id/eventos/:eventoId', async (req, res) => {
+  const encontrado = await obtenerMascotaYEvento(
+    req.params.id,
+    req.params.eventoId,
+    res.locals.tutorId
+  );
+  if (!encontrado) {
+    res.status(404).json({ error: 'Registro no encontrado' });
+    return;
+  }
+  const { mascota, evento } = encontrado;
+
+  const {
+    tipo_registro,
+    nombre,
+    fecha_evento,
+    descripcion,
+    dosis,
+    veterinario,
+    fecha_proxima_dosis,
+    peso_kg,
+  } = req.body ?? {};
+
+  if (
+    [tipo_registro, nombre, fecha_evento, descripcion, dosis, veterinario, fecha_proxima_dosis, peso_kg].every(
+      (v) => v === undefined
+    )
+  ) {
+    res.status(400).json({ error: 'No enviaste cambios' });
+    return;
+  }
+
+  // Regla 1: el tipo no se cambia
+  if (tipo_registro !== undefined && tipo_registro !== evento.tipo_registro) {
+    res.status(400).json({
+      error: 'No se puede cambiar el tipo de registro. Elimínalo y crea uno nuevo.',
+    });
+    return;
+  }
+  const esPeso = evento.tipo_registro === 'Peso';
+
+  if (nombre !== undefined) {
+    if (typeof nombre !== 'string' || nombre.trim() === '') {
+      res.status(400).json({ error: 'El nombre no puede quedar vacío' });
+      return;
+    }
+    evento.nombre = nombre.trim();
+  }
+
+  if (fecha_evento !== undefined) {
+    const fecha = new Date(fecha_evento);
+    if (typeof fecha_evento !== 'string' || isNaN(fecha.getTime())) {
+      res.status(400).json({ error: 'Fecha no válida (formato AAAA-MM-DD)' });
+      return;
+    }
+    if (fecha > new Date()) {
+      res.status(400).json({ error: 'La fecha no puede ser futura' });
+      return;
+    }
+    evento.fecha_evento = fecha;
+  }
+
+  if (!textoOpcional(descripcion) || !textoOpcional(dosis)) {
+    res.status(400).json({ error: 'La descripción y la dosis deben ser texto' });
+    return;
+  }
+  if (descripcion !== undefined) evento.descripcion = descripcion;
+  if (dosis !== undefined) evento.dosis = dosis;
+
+  if (veterinario !== undefined) {
+    if (
+      typeof veterinario !== 'object' ||
+      veterinario === null ||
+      !textoOpcional(veterinario.nombre) ||
+      !textoOpcional(veterinario.clinica)
+    ) {
+      res.status(400).json({ error: 'Veterinario debe tener la forma { "nombre": "...", "clinica": "..." }' });
+      return;
+    }
+    evento.set('veterinario', veterinario);
+  }
+
+  if (peso_kg !== undefined) {
+    if (!esPeso) {
+      res.status(400).json({ error: 'peso_kg solo se usa en registros de tipo Peso' });
+      return;
+    }
+    if (typeof peso_kg !== 'number' || peso_kg <= 0 || peso_kg > 1000) {
+      res.status(400).json({ error: 'peso_kg debe ser un número mayor a 0' });
+      return;
+    }
+    evento.peso_kg = peso_kg;
+  }
+
+  if (fecha_proxima_dosis !== undefined) {
+    if (fecha_proxima_dosis === null || fecha_proxima_dosis === '') {
+      evento.fecha_proxima_dosis = null; // enviar null o "" = quitar la próxima dosis
+    } else {
+      if (esPeso) {
+        res.status(400).json({ error: 'Un registro de Peso no tiene próxima dosis' });
+        return;
+      }
+      const proxima = new Date(fecha_proxima_dosis);
+      if (typeof fecha_proxima_dosis !== 'string' || isNaN(proxima.getTime())) {
+        res.status(400).json({ error: 'Fecha de próxima dosis no válida (formato AAAA-MM-DD)' });
+        return;
+      }
+      evento.fecha_proxima_dosis = proxima;
+    }
+  }
+
+  // Revisión final: con los valores ya combinados (los nuevos y los que no cambiaron)
+  if (evento.fecha_proxima_dosis && evento.fecha_proxima_dosis <= evento.fecha_evento) {
+    res.status(400).json({ error: 'La próxima dosis debe ser posterior a la fecha del registro' });
+    return;
+  }
+
+  // Regla 2: si es un peso, recalcular el peso actual
+  if (esPeso) recalcularPesoActual(mascota);
+
+  await mascota.save();
+  res.json(evento);
+});
+
+// DELETE /mascotas/:id/eventos/:eventoId → borra un registro del historial
+mascotasRouter.delete('/:id/eventos/:eventoId', async (req, res) => {
+  const encontrado = await obtenerMascotaYEvento(
+    req.params.id,
+    req.params.eventoId,
+    res.locals.tutorId
+  );
+  if (!encontrado) {
+    res.status(404).json({ error: 'Registro no encontrado' });
+    return;
+  }
+  const { mascota, evento } = encontrado;
+  const eraPeso = evento.tipo_registro === 'Peso';
+
+  mascota.eventos_clinicos.pull(evento._id);
+  if (eraPeso) recalcularPesoActual(mascota);
+  await mascota.save();
+
+  // Pendiente HU15: cuando existan los recordatorios, borrar también el asociado a este registro
+
+  res.json({ mensaje: 'Registro eliminado del historial' });
+});
