@@ -91,7 +91,10 @@ export default function Mascotas() {
             ) : null
           }
           renderItem={({ item }) => (
-            <View style={estilos.tarjeta}>
+            <Pressable
+              style={estilos.tarjeta}
+              onPress={() => router.push({ pathname: '/mascota/[id]', params: { id: item._id } })}
+            >
               <View style={estilos.filaTitulo}>
                 <Text style={estilos.nombre}>{item.nombre}</Text>
                 {item.estado_extraviado && <Text style={estilos.extraviada}>Extraviada</Text>}
@@ -104,7 +107,7 @@ export default function Mascotas() {
                 {textoEdad(item.edad)}
                 {item.peso_actual != null ? ` · ${item.peso_actual} kg` : ''}
               </Text>
-            </View>
+            </Pressable>
           )}
         />
       )}
