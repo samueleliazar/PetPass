@@ -115,7 +115,19 @@ export default function FichaMascota() {
 
   return (
     <View style={estilos.contenedor}>
-      <Stack.Screen options={{ title: ficha.nombre }} />
+      <Stack.Screen
+        options={{
+          title: ficha.nombre,
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push({ pathname: '/editar-mascota', params: { id: ficha._id } })}
+              hitSlop={10}
+            >
+              <Text style={{ color: '#2e7d32', fontSize: 16, fontWeight: '600' }}>Editar</Text>
+            </Pressable>
+          ),
+        }}
+      />
 
       <FlatList
         data={eventos}

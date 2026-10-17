@@ -11,6 +11,11 @@ const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
 app.use(express.json()); // NUEVO: permite recibir datos en formato JSON
+// Muestra en la terminal cada petición que llega (útil para depurar)
+app.use((req, _res, next) => {
+  console.log(`${new Date().toLocaleTimeString()} ${req.method} ${req.url}`);
+  next();
+});
 app.use('/recordatorios', recordatoriosRouter);
 
 app.get('/health', (_req, res) => {
