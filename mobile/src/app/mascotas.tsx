@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import { api, borrarToken, ErrorApi } from '../api';
 
 type Mascota = {
@@ -44,9 +44,12 @@ export default function Mascotas() {
     }
   }, []);
 
-  useEffect(() => {
-    cargar();
-  }, [cargar]);
+    // Se ejecuta cada vez que la pantalla vuelve a quedar visible (por ejemplo, al volver de crear una mascota)
+  useFocusEffect(
+    useCallback(() => {
+      cargar();
+    }, [cargar])
+  );
 
   async function cerrarSesion() {
     try {
@@ -78,7 +81,7 @@ export default function Mascotas() {
         <FlatList
           data={mascotas}
           keyExtractor={(m) => m._id}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
           refreshing={refrescando}
           onRefresh={() => {
             setRefrescando(true);
@@ -111,6 +114,9 @@ export default function Mascotas() {
           )}
         />
       )}
+        <Pressable style={estilos.botonFlotante} onPress={() => router.push('/nueva-mascota')}>
+        <Text style={estilos.botonFlotanteTexto}>＋ Agregar mascota</Text>
+      </Pressable>
     </View>
   );
 }
@@ -134,4 +140,19 @@ const estilos = StyleSheet.create({
   detalle: { color: '#555', marginTop: 4 },
   vacio: { textAlign: 'center', color: '#777', marginTop: 40 },
   error: { color: '#c62828', textAlign: 'center', marginBottom: 12 },
+    botonFlotante: {
+    position: 'absolute',
+    right: 16,
+    bottom: 24,
+    backgroundColor: '#2e7d32',
+    borderRadius: 28,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  botonFlotanteTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
