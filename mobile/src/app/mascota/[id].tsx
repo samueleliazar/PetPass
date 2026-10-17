@@ -136,9 +136,13 @@ export default function FichaMascota() {
         ListHeaderComponent={
           <View>
             {ficha.estado_extraviado && (
-              <View style={estilos.bannerExtravio}>
+              <Pressable
+                style={estilos.bannerExtravio}
+                onPress={() => router.push({ pathname: '/extravio', params: { id: ficha._id } })}
+              >
                 <Text style={estilos.bannerTexto}>🚨 Reportada como extraviada</Text>
-              </View>
+                <Text style={estilos.bannerSubtexto}>Toca para ver o editar el aviso</Text>
+              </Pressable>
             )}
 
             {/* Datos generales */}
@@ -154,6 +158,15 @@ export default function FichaMascota() {
                 <Text style={estilos.detalle}>Peso actual: {ficha.peso_actual} kg</Text>
               )}
             </View>
+            
+            {!ficha.estado_extraviado && (
+              <Pressable
+                style={estilos.botonReportar}
+                onPress={() => router.push({ pathname: '/extravio', params: { id: ficha._id } })}
+              >
+                <Text style={estilos.botonReportarTexto}>🚨 Reportar extravío</Text>
+              </Pressable>
+            )}
 
             {/* HU08: alergias y condiciones críticas, destacadas */}
             {tieneAlertas ? (
@@ -290,4 +303,15 @@ const estilos = StyleSheet.create({
     filaSeccion: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   botonRegistrar: { backgroundColor: '#2e7d32', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7 },
   botonRegistrarTexto: { color: '#fff', fontWeight: '600' },
+    bannerSubtexto: { color: '#ffebee', textAlign: 'center', marginTop: 4, fontSize: 13 },
+  botonReportar: {
+    borderWidth: 1,
+    borderColor: '#c62828',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  botonReportarTexto: { color: '#c62828', fontWeight: '600', fontSize: 15 },
 });
