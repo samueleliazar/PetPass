@@ -51,15 +51,7 @@ export default function Mascotas() {
     }, [cargar])
   );
 
-  async function cerrarSesion() {
-    try {
-      await api<unknown>('/auth/logout', { metodo: 'POST' });
-    } catch {
-      // Si falla (por ejemplo, sin conexión), igual cerramos la sesión en el teléfono
-    }
-    await borrarToken();
-    router.replace('/login');
-  }
+
 
   return (
     <View style={estilos.contenedor}>
@@ -73,8 +65,8 @@ export default function Mascotas() {
             </Pressable>
           ),
           headerRight: () => (
-            <Pressable onPress={cerrarSesion} hitSlop={10}>
-              <Text style={estilos.salir}>Salir</Text>
+            <Pressable onPress={() => router.push('/perfil')} hitSlop={10}>
+              <Text style={estilos.salir}>👤 Perfil</Text>
             </Pressable>
           ),
         }}
@@ -128,7 +120,7 @@ export default function Mascotas() {
 
 const estilos = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: '#f5f5f5' },
-  salir: { color: '#c62828', fontSize: 16, fontWeight: '600' },
+  salir: { color: '#2e7d32', fontSize: 16, fontWeight: '600' },
   tarjeta: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12 },
   filaTitulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   nombre: { fontSize: 20, fontWeight: 'bold' },
