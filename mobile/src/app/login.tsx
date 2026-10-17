@@ -79,6 +79,11 @@ export default function Login() {
           <Text style={estilos.textoBoton}>Iniciar sesión</Text>
         )}
       </Pressable>
+      <Pressable onPress={() => router.push('/registro')} style={{ marginTop: 20 }}>
+                      <Text style={estilos.enlace}>
+                          ¿No tienes cuenta? <Text style={{ fontWeight: 'bold' }}>Crear una</Text>
+                      </Text>
+              </Pressable>
     </KeyboardAvoidingView>
   );
 }
@@ -99,4 +104,5 @@ const estilos = StyleSheet.create({
   boton: { backgroundColor: '#2e7d32', padding: 16, borderRadius: 10, alignItems: 'center' },
   botonDesactivado: { opacity: 0.6 },
   textoBoton: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  enlace: { textAlign: 'center', color: '#2e7d32', fontSize: 15 },
 });
