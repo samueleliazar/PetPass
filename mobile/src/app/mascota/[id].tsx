@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { api, borrarToken, ErrorApi } from '../../api';
 
 type Ficha = {
@@ -68,6 +68,13 @@ export default function FichaMascota() {
   const [cargando, setCargando] = useState(true);
   const [cargandoEventos, setCargandoEventos] = useState(false);
   const [error, setError] = useState('');
+    // Cada vez que la pantalla vuelve a verse (por ejemplo, después de registrar algo), recargamos
+  const [recarga, setRecarga] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      setRecarga((r) => r + 1);
+    }, [])
+  );
 
   async function manejarError(e: unknown) {
     if (e instanceof ErrorApi && e.status === 401) {
@@ -161,7 +168,15 @@ export default function FichaMascota() {
             )}
 
             {/* HU09: filtros del historial */}
-            <Text style={estilos.seccion}>Historial clínico</Text>
+              <View style={estilos.filaSeccion}>
+                <Text style={estilos.seccion}>Historial clínico</Text>
+                <Pressable
+                  onPress={() => router.push({ pathname: '/nuevo-evento', params: { id: ficha._id } })}
+                  style={estilos.botonRegistrar}
+                >
+                  <Text style={estilos.botonRegistrarTexto}>＋ Registrar</Text>
+                </Pressable>
+              </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
               {FILTROS.map((f) => (
                 <Pressable
@@ -260,4 +275,7 @@ const estilos = StyleSheet.create({
   proxima: { color: '#1565c0', marginTop: 6, fontWeight: '500' },
   vacio: { textAlign: 'center', color: '#777', marginTop: 20 },
   error: { color: '#c62828', textAlign: 'center', margin: 16 },
+    filaSeccion: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  botonRegistrar: { backgroundColor: '#2e7d32', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7 },
+  botonRegistrarTexto: { color: '#fff', fontWeight: '600' },
 });
