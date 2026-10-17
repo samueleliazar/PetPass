@@ -67,6 +67,11 @@ export default function Mascotas() {
         options={{
           title: 'Mis mascotas',
           headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable onPress={() => router.push('/recordatorios')} hitSlop={10}>
+              <Text style={estilos.recordatorios}>🔔 Recordatorios</Text>
+            </Pressable>
+          ),
           headerRight: () => (
             <Pressable onPress={cerrarSesion} hitSlop={10}>
               <Text style={estilos.salir}>Salir</Text>
@@ -155,4 +160,5 @@ const estilos = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   botonFlotanteTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    recordatorios: { color: '#2e7d32', fontSize: 16, fontWeight: '600' },
 });
