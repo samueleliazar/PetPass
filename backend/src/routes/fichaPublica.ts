@@ -3,6 +3,7 @@ import { Mascota } from '../models/Mascota';
 import { Tutor } from '../models/Tutor';
 import { Raza } from '../models/Raza';
 import { AlertaExtravio } from '../models/AlertaExtravio';
+import { registrarLectura } from '../services/lecturas';
 
 export const fichaPublicaRouter = Router();
 
@@ -100,6 +101,17 @@ fichaPublicaRouter.get('/e/:token', async (req, res) => {
       ? AlertaExtravio.findOne({ _id: mascota.id_alerta_activa, estado: 'Activa' }).lean()
       : null,
   ]);
+    // HU25: registrar el escaneo. NO se espera (sin await), para no hacer más lenta la ficha.
+  const canal = req.query.c === 'qr' ? 'QR' : 'NFC';
+  registrarLectura({
+    idMascota: mascota._id,
+    idTutor: mascota.id_tutor,
+    nombreMascota: mascota.nombre,
+    uuidPlaca: canal === 'NFC' ? (mascota.medalla?.uuid_placa ?? null) : null,
+    idAlerta: alerta?._id ?? null,
+    canal,
+    userAgent: req.get('user-agent'),
+  }).catch((e) => console.error('No se pudo registrar la lectura:', e));
 
   const vis = mascota.visibilidad_publica ?? {
   telefono: true,

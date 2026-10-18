@@ -9,6 +9,8 @@ import { extraviosRouter } from './routes/extravios';
 import { medallasRouter } from './routes/medallas';
 import { fichaPublicaRouter } from './routes/fichaPublica';
 import { privacidadRouter } from './routes/privacidad';
+import { lecturasRouter } from './routes/lecturas';
+
 const app = express();
 const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -33,6 +35,7 @@ app.use('/mascotas', mascotasRouter);
 app.use('/mascotas/:id', extraviosRouter);
 app.use('/mascotas/:id', medallasRouter);
 app.use('/mascotas/:id', privacidadRouter);
+app.use('/mascotas/:id', lecturasRouter);
 app.use(fichaPublicaRouter);
 async function iniciar() {
   if (!MONGODB_URI) {
