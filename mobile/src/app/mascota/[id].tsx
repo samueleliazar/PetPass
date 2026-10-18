@@ -167,6 +167,12 @@ export default function FichaMascota() {
                 <Text style={estilos.botonReportarTexto}>🚨 Reportar extravío</Text>
               </Pressable>
             )}
+            <Pressable
+              style={estilos.botonPrivacidad}
+              onPress={() => router.push({ pathname: '/privacidad', params: { id: ficha._id } })}
+            >
+              <Text style={estilos.textoPrivacidad}>🔒 Privacidad de la ficha pública</Text>
+            </Pressable>
 
             {/* HU08: alergias y condiciones críticas, destacadas */}
             {tieneAlertas ? (
@@ -314,4 +320,9 @@ const estilos = StyleSheet.create({
     backgroundColor: '#fff',
   },
   botonReportarTexto: { color: '#c62828', fontWeight: '600', fontSize: 15 },
+  botonPrivacidad: {
+  borderWidth: 1, borderColor: '#2e7d32', borderRadius: 12,
+  padding: 12, alignItems: 'center', marginBottom: 12, backgroundColor: '#fff',
+},
+textoPrivacidad: { color: '#2e7d32', fontWeight: '600', fontSize: 16 },
 });

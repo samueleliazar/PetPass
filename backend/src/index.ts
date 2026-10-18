@@ -8,12 +8,13 @@ import { recordatoriosRouter } from './routes/recordatorios';
 import { extraviosRouter } from './routes/extravios';
 import { medallasRouter } from './routes/medallas';
 import { fichaPublicaRouter } from './routes/fichaPublica';
+import { privacidadRouter } from './routes/privacidad';
 const app = express();
 const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
-app.use(fichaPublicaRouter);
 app.use(express.json()); // NUEVO: permite recibir datos en formato JSON
+
 // Muestra en la terminal cada petición que llega (útil para depurar)
 app.use((req, _res, next) => {
   console.log(`${new Date().toLocaleTimeString()} ${req.method} ${req.url}`);
@@ -31,6 +32,8 @@ app.use('/auth', authRouter);
 app.use('/mascotas', mascotasRouter);
 app.use('/mascotas/:id', extraviosRouter);
 app.use('/mascotas/:id', medallasRouter);
+app.use('/mascotas/:id', privacidadRouter);
+app.use(fichaPublicaRouter);
 async function iniciar() {
   if (!MONGODB_URI) {
     console.error('Falta MONGODB_URI en el archivo .env');
