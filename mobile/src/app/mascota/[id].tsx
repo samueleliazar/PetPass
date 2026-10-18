@@ -173,7 +173,12 @@ export default function FichaMascota() {
             >
               <Text style={estilos.textoPrivacidad}>🔒 Privacidad de la ficha pública</Text>
             </Pressable>
-
+            <Pressable
+              style={estilos.botonPrivacidad}
+              onPress={() => router.push({ pathname: '/medalla', params: { id: ficha._id } })}
+            >
+              <Text style={estilos.textoPrivacidad}>🏷️ Medalla</Text>
+            </Pressable>
             {/* HU08: alergias y condiciones críticas, destacadas */}
             {tieneAlertas ? (
               <View style={estilos.tarjetaAlerta}>

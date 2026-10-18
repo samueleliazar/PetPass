@@ -75,3 +75,40 @@ medallasRouter.post('/medalla', async (req, res) => {
 
   res.status(201).json(mascota.medalla);
 });
+// GET /mascotas/:id/medalla → estado de la medalla (para la app)
+medallasRouter.get('/medalla', requiereAuth, async (req, res) => {
+  const id = (req.params as { id: string }).id;
+  if (!isValidObjectId(id)) return res.status(404).json({ error: 'Mascota no encontrada' });
+
+  const mascota = await Mascota.findOne({ _id: id, id_tutor: res.locals.tutorId })
+    .select('medalla')
+    .lean();
+  if (!mascota) return res.status(404).json({ error: 'Mascota no encontrada' });
+
+  const m = mascota.medalla;
+  if (!m || m.estado_vinculacion !== 'Activa') return res.json({ activa: false });
+
+  res.json({
+    activa: true,
+    uuid_placa: m.uuid_placa,
+    fecha_vinculacion: m.fecha_vinculacion,
+    url_emergencia: urlEmergencia(m.token_publico), // se calcula con el PUBLIC_URL actual
+  });
+});
+
+// DELETE /mascotas/:id/medalla → desvincular (HU19). La confirmación se pide en la app.
+medallasRouter.delete('/medalla', requiereAuth, async (req, res) => {
+  const id = (req.params as { id: string }).id;
+  if (!isValidObjectId(id)) return res.status(404).json({ error: 'Mascota no encontrada' });
+
+  const mascota = await Mascota.findOne({ _id: id, id_tutor: res.locals.tutorId });
+  if (!mascota) return res.status(404).json({ error: 'Mascota no encontrada' });
+  if (!mascota.medalla || mascota.medalla.estado_vinculacion !== 'Activa') {
+    return res.status(409).json({ error: 'La mascota no tiene una medalla activa' });
+  }
+
+  // La medalla queda Desvinculada: su URL deja de mostrar datos en la ficha pública
+  mascota.medalla.estado_vinculacion = 'Desvinculada';
+  await mascota.save();
+  res.json({ activa: false });
+});
