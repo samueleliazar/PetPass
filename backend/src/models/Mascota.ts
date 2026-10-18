@@ -19,7 +19,18 @@ const eventoClinicoSchema = new Schema({
   fecha_proxima_dosis: { type: Date, default: null },
   peso_kg: { type: Number, min: 0 },
 });
-
+// Subdocumento: medalla QR/NFC del collar (a lo más una por mascota)
+const medallaSchema = new Schema(
+  {
+    uuid_placa: { type: String, required: true },
+    uid_nfc: { type: String }, // se completa al leer el chip NFC (opcional si se vincula por QR)
+    token_publico: { type: String, required: true },
+    estado_vinculacion: { type: String, enum: ['Activa', 'Desvinculada'], default: 'Activa' },
+    url_emergencia: { type: String, required: true },
+    fecha_vinculacion: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
 const mascotaSchema = new Schema(
   {
     id_tutor: { type: Schema.Types.ObjectId, ref: 'Tutor', required: true, index: true },
@@ -43,6 +54,7 @@ const mascotaSchema = new Schema(
     estado_extraviado: { type: Boolean, default: false },
     id_alerta_activa: { type: Schema.Types.ObjectId, ref: 'Alerta_Extravio', default: null },
         eventos_clinicos: { type: [eventoClinicoSchema], default: [] },
+        medalla: { type: medallaSchema, default: undefined },
   },
   {
     collection: 'Mascota',
@@ -64,5 +76,18 @@ mascotaSchema.virtual('edad').get(function () {
 
   return { anios: Math.floor(meses / 12), meses: meses % 12 };
 });
-
+// Una placa no puede estar en dos mascotas, y el token público debe ser único.
+// Son "parciales": solo aplican a las mascotas que tienen medalla.
+mascotaSchema.index(
+  { 'medalla.uuid_placa': 1 },
+  { unique: true, partialFilterExpression: { 'medalla.uuid_placa': { $type: 'string' } } }
+);
+mascotaSchema.index(
+  { 'medalla.token_publico': 1 },
+  { unique: true, partialFilterExpression: { 'medalla.token_publico': { $type: 'string' } } }
+);
+mascotaSchema.index(
+  { 'medalla.uid_nfc': 1 },
+  { unique: true, partialFilterExpression: { 'medalla.uid_nfc': { $type: 'string' } } }
+);
 export const Mascota = model('Mascota', mascotaSchema);

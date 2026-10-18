@@ -6,6 +6,7 @@ import { authRouter } from './routes/auth';
 import { mascotasRouter } from './routes/mascotas';
 import { recordatoriosRouter } from './routes/recordatorios';
 import { extraviosRouter } from './routes/extravios';
+import { medallasRouter } from './routes/medallas';
 const app = express();
 const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -27,6 +28,7 @@ app.use('/razas', razasRouter); // NUEVO: todas las rutas de razas parten con /r
 app.use('/auth', authRouter);
 app.use('/mascotas', mascotasRouter);
 app.use('/mascotas/:id', extraviosRouter);
+app.use('/mascotas/:id', medallasRouter);
 async function iniciar() {
   if (!MONGODB_URI) {
     console.error('Falta MONGODB_URI en el archivo .env');
