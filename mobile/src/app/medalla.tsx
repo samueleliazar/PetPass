@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
 import {
-  ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { api, borrarToken, ErrorApi } from '../api';
+import QRCode from 'react-native-qrcode-svg';
 
 type EstadoMedalla =
   | { activa: false }
@@ -47,8 +48,18 @@ export default function Medalla() {
       setOcupado(false);
     }
   }
+  async function compartir(url: string) {
+    try {
+      await Share.share({
+        message: `Si encuentras a mi mascota, abre este enlace para ver su ficha de emergencia y contactarme: ${url}`,
+      });
+    } catch {
+      Alert.alert('Error', 'No se pudo abrir el menú para compartir.');
+    }
+  }
 
   function confirmarDesvincular() {
+    
     // HU19: pide confirmación
     Alert.alert(
       '¿Desvincular la medalla?',
@@ -89,6 +100,19 @@ export default function Medalla() {
           <Text style={estilos.titulo}>✅ Medalla activa</Text>
           <Text style={estilos.detalle}>Código: {estado.uuid_placa}</Text>
           <Text style={estilos.detalle}>Vinculada el {fecha(estado.fecha_vinculacion)}</Text>
+                    {/* HU20: el QR abre la misma ficha, marcando el canal QR */}
+          <View style={estilos.qrCaja}>
+            <QRCode value={`${estado.url_emergencia}?c=qr`} size={200} />
+          </View>
+          <Text style={estilos.ayuda}>
+            Quien escanee este código con la cámara verá la ficha de emergencia.
+          </Text>
+          <Pressable
+            style={estilos.boton}
+            onPress={() => compartir(`${estado.url_emergencia}?c=qr`)}
+          >
+            <Text style={estilos.textoBoton}>📤 Compartir QR</Text>
+          </Pressable>
           <Pressable
             style={[estilos.boton, estilos.botonPeligro, ocupado && { opacity: 0.6 }]}
             onPress={confirmarDesvincular}
@@ -139,4 +163,5 @@ const estilos = StyleSheet.create({
   boton: { backgroundColor: '#2e7d32', borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 12 },
   botonPeligro: { backgroundColor: '#c62828' },
   textoBoton: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  qrCaja: { alignItems: 'center', padding: 16, backgroundColor: '#fff', marginTop: 12 },
 });
