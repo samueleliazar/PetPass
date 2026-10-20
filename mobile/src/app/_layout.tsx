@@ -8,6 +8,7 @@ export default function RootLayout() {
       <Stack.Screen name="escaneos" options={{ title: 'Escaneos de la medalla' }} />
       <Stack.Screen name="privacidad" options={{ title: 'Privacidad de la ficha' }} />
       <Stack.Screen name="medalla" options={{ title: 'Medalla' }} />
+      <Stack.Screen name="recuperar" options={{ title: 'Recuperar contraseña' }} />
     </Stack>
   );
 }

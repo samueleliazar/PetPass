@@ -10,6 +10,7 @@ import { medallasRouter } from './routes/medallas';
 import { fichaPublicaRouter } from './routes/fichaPublica';
 import { privacidadRouter } from './routes/privacidad';
 import { lecturasRouter } from './routes/lecturas';
+import { paginaRestablecerRouter } from './routes/paginaRestablecer';
 
 const app = express();
 const PORT = 3000;
@@ -37,6 +38,7 @@ app.use('/mascotas/:id', medallasRouter);
 app.use('/mascotas/:id', privacidadRouter);
 app.use('/mascotas/:id', lecturasRouter);
 app.use(fichaPublicaRouter);
+app.use(paginaRestablecerRouter);
 async function iniciar() {
   if (!MONGODB_URI) {
     console.error('Falta MONGODB_URI en el archivo .env');

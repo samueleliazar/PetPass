@@ -79,6 +79,9 @@ export default function Login() {
           <Text style={estilos.textoBoton}>Iniciar sesión</Text>
         )}
       </Pressable>
+            <Pressable onPress={() => router.push('/recuperar')} style={{ marginTop: 14, alignItems: 'center' }}>
+        <Text style={{ color: '#2e7d32', fontWeight: '600' }}>¿Olvidaste tu contraseña?</Text>
+      </Pressable>
       <Pressable onPress={() => router.push('/registro')} style={{ marginTop: 20 }}>
                       <Text style={estilos.enlace}>
                           ¿No tienes cuenta? <Text style={{ fontWeight: 'bold' }}>Crear una</Text>

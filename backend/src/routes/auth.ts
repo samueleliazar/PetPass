@@ -166,7 +166,8 @@ authRouter.post('/recuperar', async (req, res) => {
     (process.env.JWT_SECRET as string) + tutor.password_hash,
     { expiresIn: '30m' }
   );
-  const enlace = `${process.env.APP_URL ?? 'http://localhost:3000'}/restablecer?token=${token}`;
+  const base = process.env.APP_URL ?? process.env.PUBLIC_URL ?? 'http://localhost:3000';
+  const enlace = `${base}/restablecer?token=${token}`;
 
   try {
     await enviarCorreo(
