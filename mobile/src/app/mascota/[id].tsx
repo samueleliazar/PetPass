@@ -178,6 +178,12 @@ export default function FichaMascota() {
               onPress={() => router.push({ pathname: '/medalla', params: { id: ficha._id } })}
             >
               <Text style={estilos.textoPrivacidad}>🏷️ Medalla</Text>
+                <Pressable
+                  style={estilos.botonPrivacidad}
+                  onPress={() => router.push({ pathname: '/escaneos', params: { id: ficha._id } })}
+                >
+              <Text style={estilos.textoPrivacidad}>📡 Escaneos de la medalla</Text>
+            </Pressable>
             </Pressable>
             {/* HU08: alergias y condiciones críticas, destacadas */}
             {tieneAlertas ? (
