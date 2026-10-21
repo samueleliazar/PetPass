@@ -11,6 +11,7 @@ import { fichaPublicaRouter } from './routes/fichaPublica';
 import { privacidadRouter } from './routes/privacidad';
 import { lecturasRouter } from './routes/lecturas';
 import { paginaRestablecerRouter } from './routes/paginaRestablecer';
+import { documentosRouter } from './routes/documentos';
 
 const app = express();
 const PORT = 3000;
@@ -57,5 +58,6 @@ async function iniciar() {
     process.exit(1);
   }
 }
+app.use('/mascotas/:id', documentosRouter);
 
 iniciar();
