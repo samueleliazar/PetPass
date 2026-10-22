@@ -122,9 +122,12 @@ export default function Documento() {
             <Text style={estilos.textoBoton}>{guardando ? 'Guardando…' : 'Confirmar texto'}</Text>
           </Pressable>
         ) : (
-          <Text style={estilos.ayuda}>
-            Próximamente podrás convertir este texto en vacunas y tratamientos del historial.
-          </Text>
+          <Pressable
+            style={estilos.boton}
+            onPress={() => router.push({ pathname: '/convertir', params: { id, docId } })}
+          >
+            <Text style={estilos.textoBoton}>➕ Agregar al historial</Text>
+          </Pressable>
         )}
       </ScrollView>
     </KeyboardAvoidingView>

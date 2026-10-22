@@ -35,6 +35,7 @@ type Evento = {
   origen: 'Manual' | 'OCR';
   fecha_proxima_dosis?: string | null;
   peso_kg?: number;
+  id_documento?: string | null;
 };
 
 const FILTROS = ['Todos', 'Vacuna', 'Tratamiento', 'Receta', 'Peso', 'Control'] as const;
@@ -178,25 +179,26 @@ export default function FichaMascota() {
               onPress={() => router.push({ pathname: '/medalla', params: { id: ficha._id } })}
             >
               <Text style={estilos.textoPrivacidad}>🏷️ Medalla</Text>
-                <Pressable
-                  style={estilos.botonPrivacidad}
-                  onPress={() => router.push({ pathname: '/escaneos', params: { id: ficha._id } })}
-                >
-              <Text style={estilos.textoPrivacidad}>📡 Escaneos de la medalla</Text>
-                      <Pressable
-          style={estilos.botonPrivacidad}
-          onPress={() => router.push({ pathname: '/por-clinica', params: { id: ficha._id } })}
-        >
-          <Text style={estilos.textoPrivacidad}>🏥 Historial por clínica</Text>
-        </Pressable>
-            </Pressable>
             </Pressable>
             <Pressable
-          style={estilos.botonPrivacidad}
-          onPress={() => router.push({ pathname: '/documentos', params: { id: ficha._id } })}
-        >
-          <Text style={estilos.textoPrivacidad}>📄 Carnets y documentos</Text>
-        </Pressable>
+              style={estilos.botonPrivacidad}
+              onPress={() => router.push({ pathname: '/escaneos', params: { id: ficha._id } })}
+            >
+              <Text style={estilos.textoPrivacidad}>📡 Escaneos de la medalla</Text>
+            </Pressable>
+            <Pressable
+              style={estilos.botonPrivacidad}
+              onPress={() => router.push({ pathname: '/por-clinica', params: { id: ficha._id } })}
+            >
+              <Text style={estilos.textoPrivacidad}>🏥 Historial por clínica</Text>
+            </Pressable>
+            <Pressable
+              style={estilos.botonPrivacidad}
+              onPress={() => router.push({ pathname: '/documentos', params: { id: ficha._id } })}
+            >
+              <Text style={estilos.textoPrivacidad}>📄 Carnets y documentos</Text>
+            </Pressable>
+  
             {/* HU08: alergias y condiciones críticas, destacadas */}
             {tieneAlertas ? (
               <View style={estilos.tarjetaAlerta}>
@@ -278,6 +280,21 @@ export default function FichaMascota() {
             {item.fecha_proxima_dosis ? (
               <Text style={estilos.proxima}>Próxima dosis: {fecha(item.fecha_proxima_dosis)}</Text>
             ) : null}
+
+            {/* HU13: desde un registro del OCR se abre la foto original */}
+            {item.id_documento ? (
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: '/documento',
+                    params: { id: ficha._id, docId: item.id_documento! },
+                  })
+                }
+                hitSlop={8}
+              >
+                <Text style={estilos.verOriginal}>📄 Ver original</Text>
+              </Pressable>
+            ) : null}
           </View>
         )}
       />
@@ -348,4 +365,5 @@ const estilos = StyleSheet.create({
   padding: 12, alignItems: 'center', marginBottom: 12, backgroundColor: '#fff',
 },
 textoPrivacidad: { color: '#2e7d32', fontWeight: '600', fontSize: 16 },
+verOriginal: { color: '#2e7d32', fontWeight: '600', marginTop: 8 },
 });
