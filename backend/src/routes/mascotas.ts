@@ -4,6 +4,12 @@ import { Mascota, TIPOS_REGISTRO } from '../models/Mascota';
 import { Raza, ESPECIES } from '../models/Raza';
 import { requiereAuth } from '../middleware/auth';
 import { sincronizarRecordatorioDeEvento, eliminarRecordatorioDeEvento } from '../services/recordatorios';
+import { validarNuevoEvento } from '../services/eventos';
+import { Documento } from '../models/Documento';
+import { Recordatorio } from '../models/Recordatorio';
+import { AlertaExtravio } from '../models/AlertaExtravio';
+import { LecturaEmergencia } from '../models/LecturaEmergencia';
+import { borrarImagenesDeMascota } from '../services/gcp';
 
 export const mascotasRouter = Router();
 
@@ -201,14 +207,14 @@ mascotasRouter.delete('/:id', async (req, res) => {
     return;
   }
 
-  // Colecciones que guardan datos de la mascota por referencia (id_mascota).
-  // Algunas todavía no existen; borrar en una colección vacía no da error.
-  const db = mongoose.connection;
+  // Datos guardados en otras colecciones. Se usan los modelos (no los nombres de colección),
+  // porque Mongoose guarda las colecciones en minúscula y plural (ej: "documentos").
   await Promise.all([
-    db.collection('Documento').deleteMany({ id_mascota: mascota._id }),
-    db.collection('Recordatorio').deleteMany({ id_mascota: mascota._id }),
-    db.collection('Alerta_Extravio').deleteMany({ id_mascota: mascota._id }),
-    db.collection('Lectura_Emergencia').deleteMany({ id_mascota: mascota._id }),
+    Documento.deleteMany({ id_mascota: mascota._id }),
+    Recordatorio.deleteMany({ id_mascota: mascota._id }),
+    AlertaExtravio.deleteMany({ id_mascota: mascota._id }),
+    LecturaEmergencia.deleteMany({ id_mascota: mascota._id }),
+    borrarImagenesDeMascota(mascota._id.toString()), // fotos de los carnets en Cloud Storage
   ]);
 
   // El historial clínico y la medalla están DENTRO de la mascota: se borran con ella
@@ -236,107 +242,22 @@ mascotasRouter.post('/:id/eventos', async (req, res) => {
     return;
   }
 
-  const {
-    tipo_registro,
-    nombre,
-    fecha_evento,
-    descripcion,
-    dosis,
-    veterinario,
-    fecha_proxima_dosis,
-    peso_kg,
-  } = req.body ?? {};
-
-  if (typeof tipo_registro !== 'string' || !TIPOS_REGISTRO.includes(tipo_registro)) {
-    res.status(400).json({ error: `Tipo no válido. Opciones: ${TIPOS_REGISTRO.join(', ')}` });
+  const resultado = validarNuevoEvento(req.body);
+  if ('error' in resultado) {
+    res.status(400).json({ error: resultado.error });
     return;
   }
-  const esPeso = tipo_registro === 'Peso';
-
-  // Nombre obligatorio, salvo en Peso, donde por defecto se llama "Peso"
-  let nombreFinal = typeof nombre === 'string' ? nombre.trim() : '';
-  if (esPeso && nombreFinal === '') nombreFinal = 'Peso';
-  if (nombreFinal === '') {
-    res.status(400).json({ error: 'El nombre es obligatorio (por ejemplo: Antirrábica)' });
-    return;
-  }
-
-  // HU07: la fecha no puede ser futura
-  const fecha = new Date(fecha_evento);
-  if (typeof fecha_evento !== 'string' || isNaN(fecha.getTime())) {
-    res.status(400).json({ error: 'Fecha no válida (formato AAAA-MM-DD)' });
-    return;
-  }
-  if (fecha > new Date()) {
-    res.status(400).json({ error: 'La fecha no puede ser futura' });
-    return;
-  }
-
-  // HU08: el peso solo se usa en registros de tipo Peso, y ahí es obligatorio
-  if (esPeso) {
-    if (typeof peso_kg !== 'number' || peso_kg <= 0 || peso_kg > 1000) {
-      res.status(400).json({ error: 'Para un registro de Peso, peso_kg debe ser un número mayor a 0' });
-      return;
-    }
-  } else if (peso_kg !== undefined) {
-    res.status(400).json({ error: 'peso_kg solo se usa en registros de tipo Peso' });
-    return;
-  }
-
-  if (!textoOpcional(descripcion) || !textoOpcional(dosis)) {
-    res.status(400).json({ error: 'La descripción y la dosis deben ser texto' });
-    return;
-  }
-  if (
-    veterinario !== undefined &&
-    (typeof veterinario !== 'object' ||
-      veterinario === null ||
-      !textoOpcional(veterinario.nombre) ||
-      !textoOpcional(veterinario.clinica))
-  ) {
-    res.status(400).json({ error: 'Veterinario debe tener la forma { "nombre": "...", "clinica": "..." }' });
-    return;
-  }
-
-  // Próxima dosis: opcional, posterior a la fecha, y no aplica a Peso
-  let proxima: Date | null = null;
-  if (fecha_proxima_dosis !== undefined && fecha_proxima_dosis !== null && fecha_proxima_dosis !== '') {
-    if (esPeso) {
-      res.status(400).json({ error: 'Un registro de Peso no tiene próxima dosis' });
-      return;
-    }
-    proxima = new Date(fecha_proxima_dosis);
-    if (typeof fecha_proxima_dosis !== 'string' || isNaN(proxima.getTime())) {
-      res.status(400).json({ error: 'Fecha de próxima dosis no válida (formato AAAA-MM-DD)' });
-      return;
-    }
-    if (proxima <= fecha) {
-      res.status(400).json({ error: 'La próxima dosis debe ser posterior a la fecha del registro' });
-      return;
-    }
-  }
+  const datos = resultado.datos;
 
   // HU08: si es el peso más reciente, actualiza el peso actual de la mascota
-  if (esPeso) {
+  if (datos.tipo_registro === 'Peso') {
     const hayPesoMasNuevo = mascota.eventos_clinicos.some(
-      (e) => e.tipo_registro === 'Peso' && e.fecha_evento > fecha
+      (e) => e.tipo_registro === 'Peso' && e.fecha_evento > datos.fecha_evento
     );
-    if (!hayPesoMasNuevo) {
-      mascota.set('peso_actual', peso_kg);
-    }
+    if (!hayPesoMasNuevo) mascota.set('peso_actual', datos.peso_kg);
   }
 
-  mascota.eventos_clinicos.push({
-    tipo_registro,
-    nombre: nombreFinal,
-    fecha_evento: fecha,
-    descripcion,
-    dosis,
-    veterinario,
-    origen: 'Manual',
-    fecha_proxima_dosis: proxima,
-    peso_kg: esPeso ? peso_kg : undefined,
-  });
+  mascota.eventos_clinicos.push({ ...datos, origen: 'Manual' });
   await mascota.save();
 
   const evento = mascota.eventos_clinicos[mascota.eventos_clinicos.length - 1];

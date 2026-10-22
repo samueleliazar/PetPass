@@ -5,6 +5,9 @@ import { Mascota } from '../models/Mascota';
 import { Documento } from '../models/Documento';
 import { requiereAuth } from '../middleware/auth';
 import { leerTexto, subirImagen, urlTemporal } from '../services/gcp';
+import { validarNuevoEvento, DatosEvento } from '../services/eventos';
+import { sugerirRegistros } from '../services/interpretarOcr';
+import { sincronizarRecordatorioDeEvento } from '../services/recordatorios';
 
 export const documentosRouter = Router({ mergeParams: true });
 
@@ -114,4 +117,74 @@ documentosRouter.patch('/documentos/:docId/validar', requiereAuth, async (req, r
   documento.estado = 'Validado';
   await documento.save();
   res.json(documento.toJSON());
+});
+
+// GET /mascotas/:id/documentos/:docId/sugerencias → registros sugeridos a partir del texto (HU14)
+documentosRouter.get('/documentos/:docId/sugerencias', requiereAuth, async (req, res) => {
+  const { id, docId } = req.params as { id: string; docId: string };
+  if (!(await mascotaPropia(id, res.locals.tutorId)) || !isValidObjectId(docId)) {
+    return res.status(404).json({ error: 'Documento no encontrado' });
+  }
+  const documento = await Documento.findOne({ _id: docId, id_mascota: id }).select('estado texto_validado');
+  if (!documento) return res.status(404).json({ error: 'Documento no encontrado' });
+  if (documento.estado !== 'Validado') {
+    return res.status(409).json({ error: 'Primero confirma el texto del documento' });
+  }
+  res.json(sugerirRegistros(documento.texto_validado ?? ''));
+});
+
+// POST /mascotas/:id/documentos/:docId/registros { registros: [...] } → crea eventos con origen OCR (HU14)
+documentosRouter.post('/documentos/:docId/registros', requiereAuth, async (req, res) => {
+  const { id, docId } = req.params as { id: string; docId: string };
+  if (!isValidObjectId(id) || !isValidObjectId(docId)) {
+    return res.status(404).json({ error: 'Documento no encontrado' });
+  }
+
+  const mascota = await Mascota.findOne({ _id: id, id_tutor: res.locals.tutorId });
+  if (!mascota) return res.status(404).json({ error: 'Mascota no encontrada' });
+
+  const documento = await Documento.findOne({ _id: docId, id_mascota: id });
+  if (!documento) return res.status(404).json({ error: 'Documento no encontrado' });
+
+  // HU14: solo se convierten documentos validados
+  if (documento.estado !== 'Validado') {
+    return res.status(409).json({ error: 'Solo se pueden convertir documentos validados' });
+  }
+
+  // HU14: una foto puede generar varios registros
+  const lista = req.body?.registros;
+  if (!Array.isArray(lista) || lista.length === 0 || lista.length > 20) {
+    return res.status(400).json({ error: 'Envía entre 1 y 20 registros en "registros"' });
+  }
+
+  // Se validan TODOS antes de guardar: o se guardan todos, o ninguno
+  const validados: DatosEvento[] = [];
+  for (let i = 0; i < lista.length; i++) {
+    const resultado = validarNuevoEvento(lista[i]);
+    if ('error' in resultado) {
+      return res.status(400).json({ error: `Registro ${i + 1}: ${resultado.error}` });
+    }
+    validados.push(resultado.datos);
+  }
+
+  const cantidadAntes = mascota.eventos_clinicos.length;
+  for (const datos of validados) {
+    if (datos.tipo_registro === 'Peso') {
+      const hayPesoMasNuevo = mascota.eventos_clinicos.some(
+        (e) => e.tipo_registro === 'Peso' && e.fecha_evento > datos.fecha_evento
+      );
+      if (!hayPesoMasNuevo) mascota.set('peso_actual', datos.peso_kg);
+    }
+    // HU14: cada registro queda con origen OCR y enlazado al documento
+    mascota.eventos_clinicos.push({ ...datos, origen: 'OCR', id_documento: documento._id });
+  }
+  await mascota.save();
+
+  // HU15: si traen próxima dosis, se programan sus recordatorios
+  const creados = mascota.eventos_clinicos.slice(cantidadAntes);
+  for (const evento of creados) {
+    await sincronizarRecordatorioDeEvento(mascota, evento);
+  }
+
+  res.status(201).json({ total: creados.length, registros: creados });
 });

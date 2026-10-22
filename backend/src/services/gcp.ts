@@ -49,3 +49,7 @@ export async function leerTexto(contenido: Buffer) {
     : 0;
   return { texto, confianza: Math.round(confianza * 1000) / 1000 };
 }
+// Borra todas las fotos de una mascota (al eliminar la mascota, HU06)
+export async function borrarImagenesDeMascota(idMascota: string) {
+  await bucket().deleteFiles({ prefix: `mascotas/${idMascota}/` });
+}
