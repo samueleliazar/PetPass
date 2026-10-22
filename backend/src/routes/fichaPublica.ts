@@ -4,6 +4,7 @@ import { Tutor } from '../models/Tutor';
 import { Raza } from '../models/Raza';
 import { AlertaExtravio } from '../models/AlertaExtravio';
 import { registrarLectura } from '../services/lecturas';
+import { fotoTemporal } from '../services/gcp';
 
 export const fichaPublicaRouter = Router();
 
@@ -94,12 +95,13 @@ fichaPublicaRouter.get('/e/:token', async (req, res) => {
   if (!mascota) return noEncontrada();
 
   // Las demás consultas van en paralelo, para responder rápido (HU21: menos de 2 s)
-  const [tutor, raza, alerta] = await Promise.all([
+  const [tutor, raza, alerta, foto] = await Promise.all([
     Tutor.findById(mascota.id_tutor).select('telefono contacto_alterno').lean(),
     Raza.findById(mascota.id_raza).select('nombre').lean(),
     mascota.estado_extraviado && mascota.id_alerta_activa
       ? AlertaExtravio.findOne({ _id: mascota.id_alerta_activa, estado: 'Activa' }).lean()
       : null,
+    fotoTemporal(mascota.foto_perfil_url), // HU21: la foto (enlace temporal, el bucket es privado)
   ]);
     // HU25: registrar el escaneo. NO se espera (sin await), para no hacer más lenta la ficha.
   const canal = req.query.c === 'qr' ? 'QR' : 'NFC';
@@ -130,8 +132,8 @@ fichaPublicaRouter.get('/e/:token', async (req, res) => {
 
   // Cabecera: foto, nombre, especie y raza, edad
   cuerpo += `<div class="tarjeta cabecera">
-    ${mascota.foto_perfil_url
-      ? `<img class="foto" src="${esc(mascota.foto_perfil_url)}" alt="Foto de ${esc(mascota.nombre)}">`
+        ${foto
+      ? `<img class="foto" src="${esc(foto)}" alt="Foto de ${esc(mascota.nombre)}">`
       : `<div class="foto">🐾</div>`}
     <h1>${esc(mascota.nombre)}</h1>
     <p class="sub">${esc(mascota.especie)}${raza ? ` · ${esc(raza.nombre)}` : ''}</p>

@@ -12,7 +12,7 @@ import { privacidadRouter } from './routes/privacidad';
 import { lecturasRouter } from './routes/lecturas';
 import { paginaRestablecerRouter } from './routes/paginaRestablecer';
 import { documentosRouter } from './routes/documentos';
-
+import { fotoMascotaRouter } from './routes/fotoMascota';
 const app = express();
 const PORT = 3000;
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -35,6 +35,7 @@ app.use('/razas', razasRouter); // NUEVO: todas las rutas de razas parten con /r
 app.use('/auth', authRouter);
 app.use('/mascotas', mascotasRouter);
 app.use('/mascotas/:id', extraviosRouter);
+app.use('/mascotas/:id', fotoMascotaRouter);
 app.use('/mascotas/:id', medallasRouter);
 app.use('/mascotas/:id', privacidadRouter);
 app.use('/mascotas/:id', lecturasRouter);

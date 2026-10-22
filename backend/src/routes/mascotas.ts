@@ -9,7 +9,7 @@ import { Documento } from '../models/Documento';
 import { Recordatorio } from '../models/Recordatorio';
 import { AlertaExtravio } from '../models/AlertaExtravio';
 import { LecturaEmergencia } from '../models/LecturaEmergencia';
-import { borrarImagenesDeMascota } from '../services/gcp';
+import { borrarImagenesDeMascota, fotoTemporal } from '../services/gcp';
 
 export const mascotasRouter = Router();
 
@@ -73,7 +73,11 @@ mascotasRouter.get('/', async (_req, res) => {
     .populate('id_raza', 'nombre')
     .sort({ nombre: 1 });
 
-  res.json(mascotas);
+  res.json(
+    await Promise.all(
+      mascotas.map(async (m) => ({ ...m.toJSON(), foto_temporal: await fotoTemporal(m.foto_perfil_url) }))
+    )
+  );
 });
 // Revisa que sea una lista de textos y la limpia (sin vacíos ni repetidos)
 function limpiarLista(valor: unknown): string[] | null {
@@ -98,7 +102,7 @@ mascotasRouter.get('/:id', async (req, res) => {
     res.status(404).json({ error: 'Mascota no encontrada' });
     return;
   }
-  res.json(mascota);
+    res.json({ ...mascota.toJSON(), foto_temporal: await fotoTemporal(mascota.foto_perfil_url) });
 });
 
 // PATCH /mascotas/:id → edita la mascota (HU06) y sus alergias/condiciones (HU08)

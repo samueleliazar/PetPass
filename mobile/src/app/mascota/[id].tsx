@@ -7,9 +7,12 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  Alert,
+  Image
 } from 'react-native';
 import { Stack, router, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { api, borrarToken, ErrorApi } from '../../api';
+import { api, borrarToken, ErrorApi, subirArchivo } from '../../api';
+import { elegirFoto } from '../../elegirFoto';
 
 type Ficha = {
   _id: string;
@@ -22,6 +25,7 @@ type Ficha = {
   alergias: string[];
   condiciones_criticas: string[];
   estado_extraviado: boolean;
+  foto_temporal?: string | null
 };
 
 type Evento = {
@@ -69,6 +73,7 @@ export default function FichaMascota() {
   const [cargando, setCargando] = useState(true);
   const [cargandoEventos, setCargandoEventos] = useState(false);
   const [error, setError] = useState('');
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
     // Cada vez que la pantalla vuelve a verse (por ejemplo, después de registrar algo), recargamos
   const [recarga, setRecarga] = useState(0);
   useFocusEffect(
@@ -113,7 +118,33 @@ export default function FichaMascota() {
   }
 
   const tieneAlertas = ficha.alergias.length > 0 || ficha.condiciones_criticas.length > 0;
+ // HU05 / HU21: foto de perfil
+  async function subirFoto(origen: 'camara' | 'galeria') {
+    const uri = await elegirFoto(origen, { anchoMaximo: 800, cuadrada: true });
+    if (!uri) return;
+    setSubiendoFoto(true);
+    try {
+      const r = await subirArchivo<{ foto_temporal: string }>(`/mascotas/${id}/foto`, 'imagen', {
+        uri,
+        nombre: 'perfil.jpg',
+        tipo: 'image/jpeg',
+      });
+      setFicha((f) => (f ? { ...f, foto_temporal: r.foto_temporal } : f));
+    } catch (e) {
+      if (e instanceof ErrorApi && e.status === 401) return manejarError(e);
+      Alert.alert('No se pudo subir la foto', e instanceof Error ? e.message : 'Intenta de nuevo');
+    } finally {
+      setSubiendoFoto(false);
+    }
+  }
 
+  function cambiarFoto() {
+    Alert.alert(`Foto de ${ficha!.nombre}`, undefined, [
+      { text: '📷 Tomar foto', onPress: () => subirFoto('camara') },
+      { text: '🖼️ Elegir de la galería', onPress: () => subirFoto('galeria') },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  }
   return (
     <View style={estilos.contenedor}>
       <Stack.Screen
@@ -148,6 +179,18 @@ export default function FichaMascota() {
 
             {/* Datos generales */}
             <View style={estilos.tarjeta}>
+                            <Pressable onPress={cambiarFoto} disabled={subiendoFoto} style={estilos.fotoCaja}>
+                {subiendoFoto ? (
+                  <ActivityIndicator color="#2e7d32" />
+                ) : ficha.foto_temporal ? (
+                  <Image source={{ uri: ficha.foto_temporal }} style={estilos.foto} />
+                ) : (
+                  <Text style={{ fontSize: 48 }}>🐾</Text>
+                )}
+              </Pressable>
+              <Text style={estilos.cambiarFoto}>
+                {ficha.foto_temporal ? 'Cambiar foto' : 'Agregar foto'}
+              </Text>
               <Text style={estilos.detalle}>
                 {ficha.especie}
                 {ficha.id_raza ? ` · ${ficha.id_raza.nombre}` : ''}
@@ -366,4 +409,10 @@ const estilos = StyleSheet.create({
 },
 textoPrivacidad: { color: '#2e7d32', fontWeight: '600', fontSize: 16 },
 verOriginal: { color: '#2e7d32', fontWeight: '600', marginTop: 8 },
+  fotoCaja: {
+    width: 110, height: 110, borderRadius: 55, backgroundColor: '#e8f5e9',
+    alignSelf: 'center', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  foto: { width: 110, height: 110 },
+  cambiarFoto: { color: '#2e7d32', textAlign: 'center', fontWeight: '600', marginTop: 6, marginBottom: 6 },
 });

@@ -53,3 +53,18 @@ export async function leerTexto(contenido: Buffer) {
 export async function borrarImagenesDeMascota(idMascota: string) {
   await bucket().deleteFiles({ prefix: `mascotas/${idMascota}/` });
 }
+// Borra un archivo del bucket (por ejemplo, la foto de perfil anterior)
+export async function borrarArchivo(ruta: string) {
+  await bucket().file(ruta).delete({ ignoreNotFound: true });
+}
+
+// Enlace temporal de una foto, o null si no hay foto (si Google falla, no rompe la pantalla)
+export async function fotoTemporal(ruta?: string | null) {
+  if (!ruta) return null;
+  try {
+    return await urlTemporal(ruta);
+  } catch (e) {
+    console.error('No se pudo generar el enlace de la foto:', e);
+    return null;
+  }
+}
