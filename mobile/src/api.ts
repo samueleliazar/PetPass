@@ -48,3 +48,43 @@ export async function api<T>(
   }
   return datos as T;
 }
+// Sube un archivo (por ejemplo, la foto de un carnet) como form-data.
+// Usa XMLHttpRequest porque el fetch de Expo no acepta archivos { uri, name, type } en FormData.
+export async function subirArchivo<T>(
+  ruta: string,
+  campo: string,
+  archivo: { uri: string; nombre: string; tipo: string }
+): Promise<T> {
+  if (!API_URL) throw new Error('Falta EXPO_PUBLIC_API_URL en mobile/.env');
+  const token = await obtenerToken();
+
+  const datos = new FormData();
+  datos.append(campo, { uri: archivo.uri, name: archivo.nombre, type: archivo.tipo } as unknown as Blob);
+
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_URL}${ruta}`);
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    // OJO: NO se pone Content-Type; se arma solo con el "boundary" del form-data
+    xhr.timeout = 60000; // 60 s: el OCR puede tardar
+
+    xhr.onload = () => {
+      let cuerpo: { error?: string } = {};
+      try {
+        cuerpo = JSON.parse(xhr.responseText);
+      } catch {
+        // la respuesta no era JSON
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(cuerpo as T);
+      } else {
+        reject(new ErrorApi(cuerpo.error ?? 'Error del servidor', xhr.status));
+      }
+    };
+    xhr.onerror = () => reject(new Error('No se pudo conectar con el servidor. Revisa tu conexión.'));
+    xhr.ontimeout = () =>
+      reject(new Error('El servidor tardó demasiado en responder. Revisa tu conexión e intenta de nuevo.'));
+
+    xhr.send(datos);
+  });
+}

@@ -191,6 +191,12 @@ export default function FichaMascota() {
         </Pressable>
             </Pressable>
             </Pressable>
+            <Pressable
+          style={estilos.botonPrivacidad}
+          onPress={() => router.push({ pathname: '/documentos', params: { id: ficha._id } })}
+        >
+          <Text style={estilos.textoPrivacidad}>📄 Carnets y documentos</Text>
+        </Pressable>
             {/* HU08: alergias y condiciones críticas, destacadas */}
             {tieneAlertas ? (
               <View style={estilos.tarjetaAlerta}>
