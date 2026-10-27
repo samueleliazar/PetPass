@@ -14,7 +14,7 @@ import { paginaRestablecerRouter } from './routes/paginaRestablecer';
 import { documentosRouter } from './routes/documentos';
 import { fotoMascotaRouter } from './routes/fotoMascota';
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000; // Cloud Run define PORT; en tu PC sigue siendo 3000
 const MONGODB_URI = process.env.MONGODB_URI;
 
 app.use(express.json()); // NUEVO: permite recibir datos en formato JSON
