@@ -1,0 +1,6 @@
+  node_modules/
+
+  # Resultados de JMeter (pesan mucho; las capturas van al informe)
+  pruebas/jmeter/*.jtl
+  pruebas/jmeter/reporte*/
+  jmeter.log

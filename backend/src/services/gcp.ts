@@ -26,13 +26,22 @@ export async function subirImagen(contenido: Buffer, tipo: string, idMascota: st
   return ruta;
 }
 
-// El bucket es privado: para ver la foto se genera un enlace temporal (15 minutos)
+// El bucket es privado: para ver una foto se genera un enlace temporal (15 minutos).
+// HU27: los enlaces se guardan en memoria y se reutilizan mientras les queden
+// más de 5 minutos, para no pedirle a Google una firma nueva en cada visita.
+const DURACION_ENLACE = 15 * 60 * 1000;
+const MARGEN_MINIMO = 5 * 60 * 1000;
+const enlacesEnMemoria = new Map<string, { url: string; vence: number }>();
+
 export async function urlTemporal(ruta: string) {
-  const [url] = await bucket().file(ruta).getSignedUrl({
-    version: 'v4',
-    action: 'read',
-    expires: Date.now() + 15 * 60 * 1000,
-  });
+  const guardado = enlacesEnMemoria.get(ruta);
+  if (guardado && guardado.vence - Date.now() > MARGEN_MINIMO) return guardado.url;
+
+  const vence = Date.now() + DURACION_ENLACE;
+  const [url] = await bucket().file(ruta).getSignedUrl({ version: 'v4', action: 'read', expires: vence });
+
+  if (enlacesEnMemoria.size > 1000) enlacesEnMemoria.clear(); // evita que crezca sin límite
+  enlacesEnMemoria.set(ruta, { url, vence });
   return url;
 }
 
