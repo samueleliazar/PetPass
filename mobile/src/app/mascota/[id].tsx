@@ -297,7 +297,7 @@ export default function FichaMascota() {
             <Text style={estilos.vacio}>
               No hay registros{filtro !== 'Todos' ? ` de tipo ${filtro}` : ''}.
             </Text>
-          ) : null
+          ) : undefined
         }
         renderItem={({ item }) => (
           <View style={estilos.tarjeta}>

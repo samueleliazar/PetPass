@@ -209,7 +209,7 @@ export default function Recordatorios() {
           keyExtractor={(r) => r._id}
           contentContainerStyle={{ padding: 16 }}
           stickySectionHeadersEnabled={false}
-          ListHeaderComponent={error ? <Text style={estilos.error}>{error}</Text> : null}
+          ListHeaderComponent={error ? <Text style={estilos.error}>{error}</Text> : undefined}
           ListEmptyComponent={
             <Text style={estilos.vacio}>
               No tienes recordatorios. Se crean solos al registrar una vacuna o un medicamento con

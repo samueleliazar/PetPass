@@ -26,7 +26,6 @@
     "plugins": [
       "expo-router",
       [
-        
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
@@ -34,16 +33,19 @@
           "imageWidth": 76
         }
       ],
-            [
+      [
         "expo-image-picker",
         {
           "cameraPermission": "PetPass usa la cámara para fotografiar los carnets de tu mascota.",
           "photosPermission": "PetPass accede a tus fotos para que elijas la imagen de un carnet."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
-    
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

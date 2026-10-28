@@ -84,11 +84,11 @@ export default function Mascotas() {
             setRefrescando(true);
             cargar();
           }}
-          ListHeaderComponent={error ? <Text style={estilos.error}>{error}</Text> : null}
+          ListHeaderComponent={error ? <Text style={estilos.error}>{error}</Text> : undefined}
           ListEmptyComponent={
             !error ? (
               <Text style={estilos.vacio}>Aún no tienes mascotas registradas.</Text>
-            ) : null
+            ) : undefined
           }
           renderItem={({ item }) => (
             <Pressable
