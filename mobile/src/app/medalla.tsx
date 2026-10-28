@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { api, borrarToken, ErrorApi } from '../api';
 import QRCode from 'react-native-qrcode-svg';
+import { cancelarNfc, grabarUrl, leerUid, nfcActivado, nfcDisponible } from '../nfc';
 
 type EstadoMedalla =
   | { activa: false }
@@ -19,6 +20,67 @@ export default function Medalla() {
   const [estado, setEstado] = useState<EstadoMedalla | null>(null);
   const [codigo, setCodigo] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  // HU18 / HU21: NFC (solo Android con el development build)
+  const [nfcOk, setNfcOk] = useState(false);
+  const [uid, setUid] = useState<string | null>(null);
+  const [esperandoChip, setEsperandoChip] = useState<'leer' | 'grabar' | null>(null);
+  // Recuerda si el usuario presionó "Cancelar" (para no mostrar un aviso de error en ese caso)
+  const cancelado = useRef(false);
+
+  useEffect(() => {
+    nfcDisponible().then(setNfcOk);
+  }, []);
+
+  async function revisarNfcEncendido() {
+    if (await nfcActivado()) return true;
+    Alert.alert('NFC apagado', 'Activa el NFC en Ajustes del teléfono (Conexiones → NFC) e intenta de nuevo.');
+    return false;
+  }
+
+  async function leerChip() {
+    if (!(await revisarNfcEncendido())) return;
+    cancelado.current = false;
+    setEsperandoChip('leer');
+    try {
+      setUid(await leerUid());
+    } catch {
+      if (!cancelado.current) {
+        Alert.alert('No se pudo leer el chip', 'Mantén el teléfono quieto sobre el sticker e intenta de nuevo.');
+      }
+    } finally {
+      setEsperandoChip(null);
+    }
+  }
+
+  async function grabarChip(url: string) {
+    // Las medallas deben llevar la dirección pública (Cloud Run), nunca la de un PC o un túnel
+    if (!url.includes('.run.app/')) {
+      Alert.alert(
+        'Servidor local',
+        'La app está conectada a un servidor de pruebas. Para grabar medallas, cambia mobile/.env al servidor publicado (Cloud Run).'
+      );
+      return;
+    }
+    if (!(await revisarNfcEncendido())) return;
+    cancelado.current = false;
+    setEsperandoChip('grabar');
+    try {
+      await grabarUrl(url);
+      Alert.alert('¡Listo!', 'El chip ya abre la ficha de emergencia. Pruébalo acercando otro teléfono con NFC.');
+    } catch {
+      if (!cancelado.current) {
+        Alert.alert('No se pudo grabar', 'Mantén el teléfono quieto sobre el sticker unos segundos e intenta de nuevo.');
+      }
+    } finally {
+      setEsperandoChip(null);
+    }
+  }
+
+  function cancelarEspera() {
+    cancelado.current = true;
+    cancelarNfc();
+  }
+
 
   async function manejarError(e: unknown) {
     if (e instanceof ErrorApi && e.status === 401) {
@@ -38,7 +100,11 @@ export default function Medalla() {
     if (!codigo.trim()) return Alert.alert('Falta el código', 'Escribe el código impreso en la placa.');
     setOcupado(true);
     try {
-      await api(`/mascotas/${id}/medalla`, { metodo: 'POST', cuerpo: { uuid_placa: codigo } });
+      await api(`/mascotas/${id}/medalla`, {
+        metodo: 'POST',
+        cuerpo: { uuid_placa: codigo, ...(uid ? { uid_nfc: uid } : {}) },
+      });
+      setUid(null);
       setCodigo('');
       cargar();
       Alert.alert('¡Listo!', 'La medalla quedó vinculada.');
@@ -84,7 +150,22 @@ export default function Medalla() {
       ]
     );
   }
-
+if (esperandoChip) {
+    return (
+      <View style={estilos.centro}>
+        <Text style={{ fontSize: 56 }}>📶</Text>
+        <Text style={estilos.titulo}>Acerca el teléfono al chip</Text>
+        <Text style={estilos.ayuda}>
+          {esperandoChip === 'leer'
+            ? 'Apoya la parte de atrás del teléfono sobre el sticker NFC.'
+            : 'Mantén el teléfono quieto sobre el sticker mientras se graba el enlace.'}
+        </Text>
+        <Pressable style={[estilos.boton, estilos.botonPeligro, { paddingHorizontal: 40 }]} onPress={cancelarEspera}>
+          <Text style={estilos.textoBoton}>Cancelar</Text>
+        </Pressable>
+      </View>
+    );
+  }
   if (!estado) {
     return (
       <View style={estilos.centro}>
@@ -113,6 +194,15 @@ export default function Medalla() {
           >
             <Text style={estilos.textoBoton}>📤 Compartir QR</Text>
           </Pressable>
+                    {nfcOk && (
+            <Pressable
+              style={[estilos.boton, estilos.botonNfc]}
+              onPress={() => grabarChip(estado.url_emergencia)}
+              disabled={ocupado}
+            >
+              <Text style={estilos.textoBoton}>📶 Grabar enlace en el chip</Text>
+            </Pressable>
+          )}
           <Pressable
             style={[estilos.boton, estilos.botonPeligro, ocupado && { opacity: 0.6 }]}
             onPress={confirmarDesvincular}
@@ -136,6 +226,13 @@ export default function Medalla() {
             autoCapitalize="characters"
             autoCorrect={false}
           />
+            {nfcOk && (
+            <Pressable style={[estilos.boton, estilos.botonNfc]} onPress={leerChip} disabled={ocupado}>
+              <Text style={estilos.textoBoton}>
+                {uid ? `📶 Chip leído: ${uid}` : '📶 Leer chip NFC (opcional)'}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             style={[estilos.boton, ocupado && { opacity: 0.6 }]}
             onPress={vincular}
@@ -164,4 +261,5 @@ const estilos = StyleSheet.create({
   botonPeligro: { backgroundColor: '#c62828' },
   textoBoton: { color: '#fff', fontWeight: '600', fontSize: 16 },
   qrCaja: { alignItems: 'center', padding: 16, backgroundColor: '#fff', marginTop: 12 },
+    botonNfc: { backgroundColor: '#1565c0' },
 });
