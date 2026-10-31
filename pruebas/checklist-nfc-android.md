@@ -56,23 +56,23 @@
 
 | # | Pantalla / función | Qué revisar | A | B | C | Observaciones |
 |---|---|---|---|---|---|---|
-| D1 | Registro e inicio de sesión | Crear cuenta, entrar, cerrar sesión |A|| |✅ Permite crear, entrar y también cerrar sesión. Nota: La app mostraba los textos en blanco, ya que estaba pensada con colores claros y porque mi teléfono estaba en modo oscuro, agregué una línea de comando que deja la app siempre en modo claro, para que nadie tenga problema.|
-| D2 | Recuperar contraseña | "¿Olvidaste tu contraseña?" → mensaje |A|| |✅ El sistema de recuperado de contraseña funciona correctamente, sigue enviándose a Ethereal por ahora. |
-| D3 | Lista de mascotas | Se ve completa, nada tapado por la barra |A| | |✅ Se ve bien, pero en términos de diseño,  el botón de recordatorios está muy cerca del texto que dice "Mis Mascotas", el botón de abajo que dice "Agregar Mascota", está en la mitad de la barra de mi teléfono, la que lleva al inicio, volver atrás, etc, hay que revisar eso, pero el botón se sigue pudiendo presionar.|
-| D4 | Crear y editar mascota | Especie, raza, fecha, alergias, condiciones |A| | |✅ Puede editarse todo eso sin problemas, pero el gran detalle que veo es que no se actualiza el cambio al salir de la pantalla de edición, sino que hay que volver a la lista de mascotas, seleccionar la mascota y recién ahí se actualiza con los cambios.|
-| D5 | Foto de perfil | Cámara y galería, permiso de cámara |A| | |✅ La cámara pide los permisos correspondientes para ingresar y tomar fotos, se puede subir la foto y dejarla como foto de perfil sin problemas, con la galería es casi lo mismo, pero no pide permisos para ingresar a la galería, llega y entra sin más|
-| D6 | Historial | Filtros, ＋ Registrar, "📄 Ver original" |A| | |✅ Se ven los filtros y el botón de registrar, también el "Ver original" en caso de que se escanee con OCR .|
-| D7 | Historial por clínica | Tarjetas desplegables |A| | |✅ Tarjetas desplegadas correctamente, se ve bien, sin ningún detalle|
-| D8 | OCR | Escanear carnet → texto → confirmar → agregar al historial |A| | |✅ Escanea el carnet, desde galería lo probé, cabe recalcar, se agrega correctamente.|
-| D9 | Recordatorios | Lista, ✓ Hecho, posponer, nuevo recordatorio |A| | |✅ Está funcionando correctamente |
-| D10 | Extravío | Reportar → aviso rojo → ¡La encontré! |A| | |✅ Funciona correctamente, el único detalle, que junto a otras funciones, no se actualiza automáticamente al volver a la interfaz de la mascota, sino que hay que volver un paso a atrás y nuevamente volver a la mascota en particular.|
-| D11 | Privacidad | Interruptores → cambia la ficha pública |A| | |✅ Los interruptores se pueden mover, quedan actualizados, todo correcto. |
-| D12 | Medalla y QR | QR visible, Compartir abre el menú de Android |A| | |✅ QR visible y permite compartir, el link se ve bien, y se abré correctamente el menú de Android.|
-| D13 | Escaneos | Agrupados por extravío |A| | |✅ Se ven perfectamente agrupados por extravío.|
-| D14 | Perfil | Editar teléfono, cerrar sesión |A| | |✅ Permite editar sin problemas, aunque no valida la cantidad de números ni si el teléfono es válido, cierra sesión sin problemas.|
-| D15 | Teclado | Los campos no quedan tapados por el teclado |A| | |❌ En varios apartados que probé si los tapaba el teclado, hay que revisar eso.|
-| D16 | Botón "atrás" de Android | Vuelve a la pantalla anterior sin cerrar la app |A| | |✅ El botón hacia atrás cumple su función correctamente.|
-| D17 | Tamaño de letra grande | La app sigue usable |A| | |✅ Las letras grandes permiten ver todo correctamente, no obstruyen nada.|
+| D1 | Registro e inicio de sesión | Crear cuenta, entrar, cerrar sesión |✅|| | Permite crear, entrar y también cerrar sesión. Nota: La app mostraba los textos en blanco, ya que estaba pensada con colores claros y porque mi teléfono estaba en modo oscuro, agregué una línea de comando que deja la app siempre en modo claro, para que nadie tenga problema.|
+| D2 | Recuperar contraseña | "¿Olvidaste tu contraseña?" → mensaje |✅|| | El sistema de recuperado de contraseña funciona correctamente, sigue enviándose a Ethereal por ahora. |
+| D3 | Lista de mascotas | Se ve completa, nada tapado por la barra |✅| | | Se ve bien, pero en términos de diseño,  el botón de recordatorios está muy cerca del texto que dice "Mis Mascotas", el botón de abajo que dice "Agregar Mascota", está en la mitad de la barra de mi teléfono, la que lleva al inicio, volver atrás, etc, hay que revisar eso, pero el botón se sigue pudiendo presionar.|
+| D4 | Crear y editar mascota | Especie, raza, fecha, alergias, condiciones |✅| | | Puede editarse todo eso sin problemas, pero el gran detalle que veo es que no se actualiza el cambio al salir de la pantalla de edición, sino que hay que volver a la lista de mascotas, seleccionar la mascota y recién ahí se actualiza con los cambios.|
+| D5 | Foto de perfil | Cámara y galería, permiso de cámara |✅| | | La cámara pide los permisos correspondientes para ingresar y tomar fotos, se puede subir la foto y dejarla como foto de perfil sin problemas, con la galería es casi lo mismo, pero no pide permisos para ingresar a la galería, llega y entra sin más|
+| D6 | Historial | Filtros, ＋ Registrar, "📄 Ver original" |✅| | | Se ven los filtros y el botón de registrar, también el "Ver original" en caso de que se escanee con OCR .|
+| D7 | Historial por clínica | Tarjetas desplegables |✅| | | Tarjetas desplegadas correctamente, se ve bien, sin ningún detalle|
+| D8 | OCR | Escanear carnet → texto → confirmar → agregar al historial |✅| | | Escanea el carnet, desde galería lo probé, cabe recalcar, se agrega correctamente.|
+| D9 | Recordatorios | Lista, ✓ Hecho, posponer, nuevo recordatorio |✅| | | Está funcionando correctamente |
+| D10 | Extravío | Reportar → aviso rojo → ¡La encontré! |✅| | | Funciona correctamente, el único detalle, que junto a otras funciones, no se actualiza automáticamente al volver a la interfaz de la mascota, sino que hay que volver un paso a atrás y nuevamente volver a la mascota en particular.|
+| D11 | Privacidad | Interruptores → cambia la ficha pública |✅| | | Los interruptores se pueden mover, quedan actualizados, todo correcto. |
+| D12 | Medalla y QR | QR visible, Compartir abre el menú de Android |✅| | | QR visible y permite compartir, el link se ve bien, y se abré correctamente el menú de Android.|
+| D13 | Escaneos | Agrupados por extravío |✅| | | Se ven perfectamente agrupados por extravío.|
+| D14 | Perfil | Editar teléfono, cerrar sesión |✅| | | Permite editar sin problemas, aunque no valida la cantidad de números ni si el teléfono es válido, cierra sesión sin problemas.|
+| D15 | Teclado | Los campos no quedan tapados por el teclado |❌| | | En varios apartados que probé si los tapaba el teclado, hay que revisar eso.|
+| D16 | Botón "atrás" de Android | Vuelve a la pantalla anterior sin cerrar la app |✅| | | El botón hacia atrás cumple su función correctamente.|
+| D17 | Tamaño de letra grande | La app sigue usable |✅| | | Las letras grandes permiten ver todo correctamente, no obstruyen nada.|
 
 ---
 
