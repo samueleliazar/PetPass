@@ -79,8 +79,10 @@
 ## 3. Resultado
 
 - Pruebas aprobadas: 16 / 33
+- Pruebas de Android (D1–D17): 16 / 17 aprobadas (dispositivo A)
+- Pruebas de NFC (N1–N16): pendientes 
 - Problemas encontrados (y si se corrigieron):
   1. La interfaz tiene detalles con la distribución de botones o textos, hay que corregir las posiciones y tamanios.
   2. Hay varios campos de texto que son tapados por el teclado, no es muy reactiva la app cuando aparece el teclado.
-  3. Cuando se hace un cambio en la ficha del animal, como por ejemplo, agregar una alergia, no se actualiza automáticamente en el front end al guardar, sino que hay que volver atrás manualmente a la lista de fichas de las mascotas y volver nuevamente a la mascota en particular para recién poder visualizar el cambio. Está en varios apartados que tienen que ver con cambiar algo de la ficha. 
+  3. Cuando se hace un cambio en la ficha del animal, como por ejemplo, agregar una alergia, no se actualiza automáticamente en el front end al guardar, sino que hay que volver atrás manualmente a la lista de fichas de las mascotas y volver nuevamente a la mascota en particular para recién poder visualizar el cambio. Está en varios apartados que tienen que ver con cambiar algo de la ficha.  (Fue corregido)
 - Capturas guardadas en: (carpeta compartida del grupo, **sin datos personales reales**)

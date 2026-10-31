@@ -97,7 +97,7 @@ export default function FichaMascota() {
       .then(setFicha)
       .catch(manejarError)
       .finally(() => setCargando(false));
-  }, [id]);
+  }, [id, recarga]);
 
   // Historial (cada vez que cambia el filtro) → usa el filtro del backend (HU09)
   useEffect(() => {
@@ -107,7 +107,7 @@ export default function FichaMascota() {
       .then((r) => setEventos(r.eventos))
       .catch(manejarError)
       .finally(() => setCargandoEventos(false));
-  }, [id, filtro]);
+  }, [id, filtro, recarga]);
 
   if (cargando) {
     return <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 40 }} />;
