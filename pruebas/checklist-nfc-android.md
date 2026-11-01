@@ -33,7 +33,7 @@
 
 | # | Prueba | Pasos | Resultado esperado | Disp. | ✅/❌ | Observaciones |
 |---|---|---|---|---|---|---|
-| N1 | Botones NFC visibles | Abrir 🏷️ Medalla en el build de Android | Aparece "📶 Leer chip NFC" (o "Grabar" si hay medalla activa) | A |❌| |
+| N1 | Botones NFC visibles | Abrir 🏷️ Medalla en el build de Android | Aparece "📶 Leer chip NFC" (o "Grabar" si hay medalla activa) | A |✅| |
 | N2 | NFC apagado | Apagar NFC → tocar el botón | Aviso "NFC apagado" | B |✅ | |
 | N3 | Leer UID | Mascota sin medalla → código → "Leer chip" → acercar sticker | "📶 Chip leído: 04…" | B | ✅| |
 | N4 | Cancelar lectura | "Leer chip" → "Cancelar" | Vuelve sin mensaje de error | B |✅ | |
