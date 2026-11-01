@@ -113,7 +113,7 @@ export default function NuevaMascota() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#fff' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <Stack.Screen options={{ title: 'Nueva mascota' }} />
 

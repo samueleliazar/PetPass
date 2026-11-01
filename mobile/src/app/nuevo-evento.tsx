@@ -130,7 +130,7 @@ export default function NuevoEvento() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#fff' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <Stack.Screen options={{ title: 'Nuevo registro' }} />
 

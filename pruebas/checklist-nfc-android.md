@@ -34,15 +34,15 @@
 | # | Prueba | Pasos | Resultado esperado | Disp. | ✅/❌ | Observaciones |
 |---|---|---|---|---|---|---|
 | N1 | Botones NFC visibles | Abrir 🏷️ Medalla en el build de Android | Aparece "📶 Leer chip NFC" (o "Grabar" si hay medalla activa) | A |❌| |
-| N2 | NFC apagado | Apagar NFC → tocar el botón | Aviso "NFC apagado" | B | | |
-| N3 | Leer UID | Mascota sin medalla → código → "Leer chip" → acercar sticker | "📶 Chip leído: 04…" | B | | |
-| N4 | Cancelar lectura | "Leer chip" → "Cancelar" | Vuelve sin mensaje de error | B | | |
-| N5 | Vincular con UID (HU18) | Tras N3 → "Vincular" | "✅ Medalla activa" | B | | |
-| N6 | UID guardado | Postman o Atlas: ver la mascota | `medalla.uid_nfc` tiene el UID | — | | |
-| N7 | Grabar enlace (HU21) | "📶 Grabar enlace en el chip" → acercar sticker | "¡Listo! El chip ya abre la ficha…" | B | | |
-| N8 | Abrir ficha con NFC (Android) | Teléfono **sin la app abierta** → acercar al sticker | Se abre el navegador con la ficha en < 2 s | B | | |
+| N2 | NFC apagado | Apagar NFC → tocar el botón | Aviso "NFC apagado" | B |✅ | |
+| N3 | Leer UID | Mascota sin medalla → código → "Leer chip" → acercar sticker | "📶 Chip leído: 04…" | B | ✅| |
+| N4 | Cancelar lectura | "Leer chip" → "Cancelar" | Vuelve sin mensaje de error | B |✅ | |
+| N5 | Vincular con UID (HU18) | Tras N3 → "Vincular" | "✅ Medalla activa" | B | ✅| |
+| N6 | UID guardado | Postman o Atlas: ver la mascota | `medalla.uid_nfc` tiene el UID | — |✅ | |
+| N7 | Grabar enlace (HU21) | "📶 Grabar enlace en el chip" → acercar sticker | "¡Listo! El chip ya abre la ficha…" | B |✅ | |
+| N8 | Abrir ficha con NFC (Android) | Teléfono **sin la app abierta** → acercar al sticker | Se abre el navegador con la ficha en < 2 s | B |✅ | |
 | N9 | Abrir ficha con NFC (iPhone) | iPhone de Samuel, pantalla desbloqueada → acercar al sticker | Notificación → abre la ficha | iPhone | | |
-| N10 | Escaneo registrado (HU25) | Tras N8 → 📡 Escaneos | Aparece un escaneo por NFC 📶 | B | | |
+| N10 | Escaneo registrado (HU25) | Tras N8 → 📡 Escaneos | Aparece un escaneo por NFC 📶 | B |✅ | |
 | N11 | Correo de aviso (HU25) | Logs de Cloud Run tras N8 | Aparece el enlace de Ethereal con el aviso | — | | |
 | N12 | Mismo chip en otra mascota | Otra cuenta → vincular leyendo el mismo sticker | Error (UID ya usado) | B | | |
 | N13 | Desvincular (HU19) | Desvincular → acercar el sticker | La ficha dice "Medalla no encontrada" | B | | |

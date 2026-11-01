@@ -140,7 +140,7 @@ export default function Extravio() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#f5f5f5' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <Stack.Screen options={{ title: activa ? 'Aviso de extravío' : 'Reportar extravío' }} />
 

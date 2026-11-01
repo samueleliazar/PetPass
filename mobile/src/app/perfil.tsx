@@ -108,7 +108,7 @@ export default function PantallaPerfil() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#f5f5f5' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <Stack.Screen options={{ title: 'Mi perfil' }} />
 

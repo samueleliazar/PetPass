@@ -42,7 +42,7 @@ export default function Login() {
   return (
     <KeyboardAvoidingView
       style={estilos.contenedor}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <Stack.Screen options={{ headerShown: false }} />
 

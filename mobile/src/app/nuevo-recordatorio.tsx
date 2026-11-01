@@ -92,7 +92,7 @@ export default function NuevoRecordatorio() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#fff' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <Stack.Screen options={{ title: 'Nuevo recordatorio' }} />
 

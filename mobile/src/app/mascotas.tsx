@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
-import { Stack, router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, borrarToken, ErrorApi } from '../api';
 
 type Mascota = {
@@ -25,6 +26,9 @@ export default function Mascotas() {
   const [refrescando, setRefrescando] = useState(false);
   const [error, setError] = useState('');
 
+  // Espacio que ocupa la barra de navegación de Android (o la barra de inicio del iPhone)
+  const margenes = useSafeAreaInsets();
+
   const cargar = useCallback(async () => {
     try {
       setError('');
@@ -44,29 +48,33 @@ export default function Mascotas() {
     }
   }, []);
 
-    // Se ejecuta cada vez que la pantalla vuelve a quedar visible (por ejemplo, al volver de crear una mascota)
+  // Se ejecuta cada vez que la pantalla vuelve a quedar visible (por ejemplo, al volver de crear una mascota)
   useFocusEffect(
     useCallback(() => {
       cargar();
     }, [cargar])
   );
 
-
-
   return (
     <View style={estilos.contenedor}>
       <Stack.Screen
         options={{
           title: 'Mis mascotas',
+          headerTitleAlign: 'center',
           headerBackVisible: false,
           headerLeft: () => (
-            <Pressable onPress={() => router.push('/recordatorios')} hitSlop={10}>
-              <Text style={estilos.recordatorios}>🔔 Recordatorios</Text>
+            <Pressable
+              onPress={() => router.push('/recordatorios')}
+              hitSlop={10}
+              accessibilityLabel="Recordatorios"
+              style={estilos.botonEncabezado}
+            >
+              <Text style={estilos.campana}>🔔</Text>
             </Pressable>
           ),
           headerRight: () => (
             <Pressable onPress={() => router.push('/perfil')} hitSlop={10}>
-              <Text style={estilos.salir}>👤 Perfil</Text>
+              <Text style={estilos.perfil}>👤 Perfil</Text>
             </Pressable>
           ),
         }}
@@ -78,7 +86,8 @@ export default function Mascotas() {
         <FlatList
           data={mascotas}
           keyExtractor={(m) => m._id}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+          // Espacio al final para que el botón flotante no tape la última mascota
+          contentContainerStyle={{ padding: 16, paddingBottom: 100 + margenes.bottom }}
           refreshing={refrescando}
           onRefresh={() => {
             setRefrescando(true);
@@ -111,7 +120,12 @@ export default function Mascotas() {
           )}
         />
       )}
-        <Pressable style={estilos.botonFlotante} onPress={() => router.push('/nueva-mascota')}>
+
+      {/* El botón queda 24 px sobre la barra de navegación, sea cual sea su altura */}
+      <Pressable
+        style={[estilos.botonFlotante, { bottom: 24 + margenes.bottom }]}
+        onPress={() => router.push('/nueva-mascota')}
+      >
         <Text style={estilos.botonFlotanteTexto}>＋ Agregar mascota</Text>
       </Pressable>
     </View>
@@ -120,7 +134,9 @@ export default function Mascotas() {
 
 const estilos = StyleSheet.create({
   contenedor: { flex: 1, backgroundColor: '#f5f5f5' },
-  salir: { color: '#2e7d32', fontSize: 16, fontWeight: '600' },
+  botonEncabezado: { paddingRight: 12 },
+  campana: { fontSize: 22 },
+  perfil: { color: '#2e7d32', fontSize: 16, fontWeight: '600' },
   tarjeta: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12 },
   filaTitulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   nombre: { fontSize: 20, fontWeight: 'bold' },
@@ -137,10 +153,9 @@ const estilos = StyleSheet.create({
   detalle: { color: '#555', marginTop: 4 },
   vacio: { textAlign: 'center', color: '#777', marginTop: 40 },
   error: { color: '#c62828', textAlign: 'center', marginBottom: 12 },
-    botonFlotante: {
+  botonFlotante: {
     position: 'absolute',
     right: 16,
-    bottom: 24,
     backgroundColor: '#2e7d32',
     borderRadius: 28,
     paddingHorizontal: 20,
@@ -152,5 +167,4 @@ const estilos = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   botonFlotanteTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
-    recordatorios: { color: '#2e7d32', fontSize: 16, fontWeight: '600' },
 });
