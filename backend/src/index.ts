@@ -3,6 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { razasRouter } from './routes/razas'; // NUEVO
 import { authRouter } from './routes/auth';
+import { pushRouter } from './routes/push';
 import { mascotasRouter } from './routes/mascotas';
 import { recordatoriosRouter } from './routes/recordatorios';
 import { extraviosRouter } from './routes/extravios';
@@ -33,6 +34,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/razas', razasRouter); // NUEVO: todas las rutas de razas parten con /razas
 app.use('/auth', authRouter);
+app.use('/push', pushRouter);
 app.use('/mascotas', mascotasRouter);
 app.use('/mascotas/:id', extraviosRouter);
 app.use('/mascotas/:id', fotoMascotaRouter);

@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { LecturaEmergencia } from '../models/LecturaEmergencia';
 import { Tutor } from '../models/Tutor';
 import { enviarCorreo } from '../config/correo';
+import { enviarPush } from './push';
 
 // HU25: bots de vista previa (WhatsApp, Telegram, Facebook, etc.) y programas automáticos
 const BOTS =
@@ -52,13 +53,26 @@ export async function registrarLectura(d: DatosLectura) {
     ? '<p><b>Tu mascota está reportada como extraviada: alguien podría haberla encontrado.</b></p>'
     : '';
 
-  // TODO HU16: cuando esté Firebase, enviar aquí también una notificación push
-  await enviarCorreo(
-    tutor.email,
-    `🐾 Escanearon la medalla de ${d.nombreMascota}`,
-    `<p>Hola ${tutor.nombre_completo}:</p>
-     <p>Alguien escaneó la medalla de <b>${d.nombreMascota}</b> el ${hora} (por ${d.canal}).</p>
-     ${extra}
-     <p>Si tienes tu teléfono visible en la ficha, es posible que te llamen pronto.</p>`
-  );
+    // HU25: aviso por push (Android)
+  await enviarPush(d.idTutor, {
+    titulo: `🐾 Escanearon la medalla de ${d.nombreMascota}`,
+    cuerpo: d.idAlerta
+      ? '¡Está reportada como extraviada! Alguien podría haberla encontrado.'
+      : `Alguien abrió su ficha de emergencia (por ${d.canal}).`,
+    datos: { idMascota: String(d.idMascota) },
+  });
+
+  // HU25: aviso por correo (si falla, que quede en los logs)
+  try {
+    await enviarCorreo(
+      tutor.email,
+      `🐾 Escanearon la medalla de ${d.nombreMascota}`,
+      `<p>Hola ${tutor.nombre_completo}:</p>
+       <p>Alguien escaneó la medalla de <b>${d.nombreMascota}</b> el ${hora} (por ${d.canal}).</p>
+       ${extra}
+       <p>Si tienes tu teléfono visible en la ficha, es posible que te llamen pronto.</p>`
+    );
+  } catch (e) {
+    console.error('Error al enviar el correo de escaneo:', e);
+  }
 }

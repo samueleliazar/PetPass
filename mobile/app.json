@@ -17,6 +17,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "googleServicesFile": "./google-services.json",
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -51,7 +52,7 @@
       "expo-status-bar",
       "expo-web-browser",
       "react-native-nfc-manager",
-      "react-native-nfc-manager"
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -67,6 +68,6 @@
         "projectId": "68fcaa43-f5b4-49f3-acff-344e7cec0a0b"
       }
     },
-    "owner": "1kmaneras"
+    "owner": "petpass-duoc"
   }
 }
