@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { api } from './api';
 
 // Se carga "a pedido" (como nfc.ts): en Expo Go o en un APK antiguo sin la librería,
@@ -50,4 +51,41 @@ export async function registrarPush() {
     // Si falla (por ejemplo, en Expo Go), no molestamos al usuario
     console.log('No se pudo registrar el push:', e);
   }
+}
+// Para no abrir dos veces la misma notificación
+let ultimaAtendida: string | null = null;
+
+function abrirSegunNotificacion(datos: Record<string, unknown> | undefined, idNotificacion: string) {
+  if (idNotificacion === ultimaAtendida) return;
+  ultimaAtendida = idNotificacion;
+
+  if (typeof datos?.idRecordatorio === 'string') {
+    // HU16: aviso de un recordatorio → lista de recordatorios
+    router.push('/recordatorios');
+  } else if (typeof datos?.idMascota === 'string') {
+    // HU25: escanearon la medalla → ficha de esa mascota
+    router.push({ pathname: '/mascota/[id]', params: { id: datos.idMascota } });
+  }
+}
+
+// Escucha cuando el usuario TOCA una notificación. Devuelve una función para dejar de escuchar.
+export function escucharToquesDeNotificacion(): () => void {
+  if (!Notifications) return () => {};
+
+  // Caso 1: la app estaba cerrada y se abrió tocando la notificación
+  Notifications.getLastNotificationResponseAsync()
+    .then((r) => {
+      if (!r) return;
+      abrirSegunNotificacion(r.notification.request.content.data, r.notification.request.identifier);
+      // Se "olvida" para que no vuelva a abrirse la próxima vez que se inicie la app
+      Notifications?.clearLastNotificationResponseAsync?.();
+    })
+    .catch(() => {});
+
+  // Caso 2: la app estaba abierta o en segundo plano
+  const suscripcion = Notifications.addNotificationResponseReceivedListener((r) => {
+    abrirSegunNotificacion(r.notification.request.content.data, r.notification.request.identifier);
+  });
+
+  return () => suscripcion.remove();
 }

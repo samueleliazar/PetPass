@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from '
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, borrarToken, ErrorApi } from '../api';
-import { registrarPush } from '../push';
+import { registrarPush, escucharToquesDeNotificacion } from '../push';
 
 type Mascota = {
   _id: string;
@@ -48,11 +48,12 @@ export default function Mascotas() {
       setRefrescando(false);
     }
   }, []);
-  // HU16/HU25: al entrar con sesión, registrar el teléfono para recibir avisos
+  // HU16/HU25: registrar el teléfono para recibir avisos y abrir la pantalla correcta al tocar uno
   useEffect(() => {
     registrarPush();
+    return escucharToquesDeNotificacion(); // al salir de la pantalla se deja de escuchar
   }, []);
-  
+
   // Se ejecuta cada vez que la pantalla vuelve a quedar visible (por ejemplo, al volver de crear una mascota)
   useFocusEffect(
     useCallback(() => {
