@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { Recordatorio } from '../models/Recordatorio';
-
+import { enviarPush } from './push';
 const HORAS_ANTES = 48;
 
 // Qué tipo de recordatorio genera cada tipo de registro del historial
@@ -79,4 +79,39 @@ export async function eliminarRecordatorioDeEvento(idEvento: Types.ObjectId) {
     id_evento: idEvento,
     estado: { $in: ['Pendiente', 'Pospuesto'] },
   });
+}
+const ESTADOS_POR_ENVIAR = ['Pendiente', 'Pospuesto'];
+const MAXIMO_POR_VUELTA = 200;
+
+// HU16: envía el push de los recordatorios cuya hora de aviso ya llegó.
+// Lo llama Cloud Scheduler cada hora (ruta POST /tareas/recordatorios).
+export async function enviarRecordatoriosPendientes() {
+  const candidatos = await Recordatorio.find({
+    estado: { $in: ESTADOS_POR_ENVIAR },
+    fecha_programada: { $lte: new Date() },
+  })
+    .sort({ fecha_programada: 1 })
+    .limit(MAXIMO_POR_VUELTA)
+    .lean();
+
+  let enviados = 0;
+  for (const r of candidatos) {
+    // Se marca como Enviado ANTES de mandar el push; si dos llamadas llegan juntas,
+    // solo una lo "toma" y el aviso no se repite
+    const tomado = await Recordatorio.findOneAndUpdate(
+      { _id: r._id, estado: { $in: ESTADOS_POR_ENVIAR } },
+      { estado: 'Enviado', fecha_entrega: new Date() }
+    );
+    if (!tomado) continue;
+
+    await enviarPush(r.id_tutor, {
+      titulo: `🔔 ${r.titulo}`,
+      cuerpo: r.mensaje,
+      datos: { idMascota: String(r.id_mascota), idRecordatorio: String(r._id) },
+    });
+    enviados++;
+  }
+
+  console.log(`Recordatorios enviados: ${enviados}`);
+  return enviados;
 }
