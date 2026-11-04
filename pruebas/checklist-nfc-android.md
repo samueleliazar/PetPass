@@ -57,7 +57,7 @@ Dispositivo A (vivo Y36 5G, Android 13), APK del build del 02/11, backend public
 | # | Prueba | Pasos | Resultado esperado | Disp. | ✅/❌ | Observaciones |
 |---|---|---|---|---|---|---|
 | P1 | Permiso y token | Iniciar sesión → "Mis mascotas" | Android pide permiso; en los logs aparece `PUT /push/token` | A | ✅ | |
-| P2 | Push al escanear (HU25) | App cerrada → abrir la ficha pública de Rocky desde otro dispositivo | Llega "🐾 Escanearon la medalla de Rocky"; al tocarlo abre la ficha | A | ✅ | Máximo un aviso cada 10 min por mascota (anti-spam); todas las lecturas se guardan en Escaneos. |
+| P2 | Push al escanear (HU25) | App cerrada → abrir la ficha pública de Rocky desde otro dispositivo | Llega "🐾 Escanearon la medalla de Rocky"; al tocarlo abre la ficha | A | ✅ | Máximo un aviso cada 2 min por mascota (anti-spam, aunque antes eran 10 minutos); todas las lecturas se guardan en Escaneos. |
 | P3 | Push de recordatorio (HU16) | Recordatorio para dentro de 2 min → Cloud Scheduler "Forzar ejecución" | Llega el push 🔔; al tocarlo abre Recordatorios y el recordatorio queda "Enviado" | A | ✅ | Sin forzar, Cloud Scheduler revisa cada hora en punto. |
 | P4 | Tocar la notificación con la app cerrada | Igual que P3, con la app cerrada por completo | La app se abre en Recordatorios | A | ✅ | |
 | P5 | Recordatorio automático (sin forzar) | Dejar un recordatorio programado y esperar a la siguiente hora en punto | Llega el push sin intervención | A | ⏳ | Pendiente: hay uno programado para el 05/11. |
