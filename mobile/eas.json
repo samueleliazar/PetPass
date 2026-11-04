@@ -9,7 +9,11 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+     "distribution": "internal",
+     "android": { "buildType": "apk" },
+     "env": {
+       "EXPO_PUBLIC_API_URL": "https://petpass-api-658804397148.southamerica-east1.run.app"
+     }
     },
     "production": {
       "autoIncrement": true
