@@ -82,7 +82,7 @@ Dispositivo A (vivo Y36 5G, Android 13), APK del build del 02/11, backend public
 | D12 | Medalla y QR | QR visible, Compartir abre el menú de Android |✅| | | QR visible y permite compartir, el link se ve bien, y se abré correctamente el menú de Android.|
 | D13 | Escaneos | Agrupados por extravío |✅| | | Se ven perfectamente agrupados por extravío.|
 | D14 | Perfil | Editar teléfono, cerrar sesión |✅| | | Permite editar sin problemas, aunque no valida la cantidad de números ni si el teléfono es válido, cierra sesión sin problemas.|
-| D15 | Teclado | Los campos no quedan tapados por el teclado |❌| | | En varios apartados que probé si los tapaba el teclado, hay que revisar eso.|
+| D15 | Teclado | Los campos no quedan tapados por el teclado |✅| | | Todo se ve correctamente, en caso de que el teclado tape los campos, se puede deslizar para ver mejor.|
 | D16 | Botón "atrás" de Android | Vuelve a la pantalla anterior sin cerrar la app |✅| | | El botón hacia atrás cumple su función correctamente.|
 | D17 | Tamaño de letra grande | La app sigue usable |✅| | | Las letras grandes permiten ver todo correctamente, no obstruyen nada.|
 
