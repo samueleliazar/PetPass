@@ -50,13 +50,25 @@
 | N15 | Tarjeta que no es sticker | "Leer chip" con una tarjeta bancaria/TNE | Lee un UID o da error sin cerrarse la app | B | | |
 | N16 | Teléfono sin NFC | Abrir 🏷️ Medalla en el build, en un teléfono sin NFC | No aparecen botones NFC y la app no se cae | A |✅ |No aparece nada relacionado al NFC y no se cae.|
 
+## 1b. Notificaciones push (HU16, HU25)
+
+Dispositivo A (vivo Y36 5G, Android 13), APK del build del 02/11, backend publicado el 04/11.
+
+| # | Prueba | Pasos | Resultado esperado | Disp. | ✅/❌ | Observaciones |
+|---|---|---|---|---|---|---|
+| P1 | Permiso y token | Iniciar sesión → "Mis mascotas" | Android pide permiso; en los logs aparece `PUT /push/token` | A | ✅ | |
+| P2 | Push al escanear (HU25) | App cerrada → abrir la ficha pública de Rocky desde otro dispositivo | Llega "🐾 Escanearon la medalla de Rocky"; al tocarlo abre la ficha | A | ✅ | Máximo un aviso cada 10 min por mascota (anti-spam); todas las lecturas se guardan en Escaneos. |
+| P3 | Push de recordatorio (HU16) | Recordatorio para dentro de 2 min → Cloud Scheduler "Forzar ejecución" | Llega el push 🔔; al tocarlo abre Recordatorios y el recordatorio queda "Enviado" | A | ✅ | Sin forzar, Cloud Scheduler revisa cada hora en punto. |
+| P4 | Tocar la notificación con la app cerrada | Igual que P3, con la app cerrada por completo | La app se abre en Recordatorios | A | ✅ | |
+| P5 | Recordatorio automático (sin forzar) | Dejar un recordatorio programado y esperar a la siguiente hora en punto | Llega el push sin intervención | A | ⏳ | Pendiente: hay uno programado para el 05/11. |
+
 ---
 
 ## 2. Android (HU28): recorrido por pantallas
 
 | # | Pantalla / función | Qué revisar | A | B | C | Observaciones |
 |---|---|---|---|---|---|---|
-| D1 | Registro e inicio de sesión | Crear cuenta, entrar, cerrar sesión |✅|| | Permite crear, entrar y también cerrar sesión. Nota: La app mostraba los textos en blanco, ya que estaba pensada con colores claros y porque mi teléfono estaba en modo oscuro, agregué una línea de comando que deja la app siempre en modo claro, para que nadie tenga problema.|
+| D1 | Registro e inicio de sesión | Crear cuenta, entrar, cerrar sesión |✅|| | Permite crear, entrar y también cerrar sesión. Nota: La app mostraba los textos en blanco, ya que estaba pensada con colores claros y porque mi teléfono estaba en modo oscuro, agregué una línea de comando que deja la app siempre en modo claro, para que nadie tenga problema. Problema solucionado.|
 | D2 | Recuperar contraseña | "¿Olvidaste tu contraseña?" → mensaje |✅|| | El sistema de recuperado de contraseña funciona correctamente, sigue enviándose a Ethereal por ahora. |
 | D3 | Lista de mascotas | Se ve completa, nada tapado por la barra |✅| | | Se ve bien, pero en términos de diseño,  el botón de recordatorios está muy cerca del texto que dice "Mis Mascotas", el botón de abajo que dice "Agregar Mascota", está en la mitad de la barra de mi teléfono, la que lleva al inicio, volver atrás, etc, hay que revisar eso, pero el botón se sigue pudiendo presionar.|
 | D4 | Crear y editar mascota | Especie, raza, fecha, alergias, condiciones |✅| | | Puede editarse todo eso sin problemas, pero el gran detalle que veo es que no se actualiza el cambio al salir de la pantalla de edición, sino que hay que volver a la lista de mascotas, seleccionar la mascota y recién ahí se actualiza con los cambios.|
@@ -86,3 +98,4 @@
   2. Hay varios campos de texto que son tapados por el teclado, no es muy reactiva la app cuando aparece el teclado.
   3. Cuando se hace un cambio en la ficha del animal, como por ejemplo, agregar una alergia, no se actualiza automáticamente en el front end al guardar, sino que hay que volver atrás manualmente a la lista de fichas de las mascotas y volver nuevamente a la mascota en particular para recién poder visualizar el cambio. Está en varios apartados que tienen que ver con cambiar algo de la ficha.  (Fue corregido)
 - Capturas guardadas en: (carpeta compartida del grupo, **sin datos personales reales**)
+- Pruebas de push (P1–P5): 4 / 5 aprobadas (P5 pendiente, 05/11)

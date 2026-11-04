@@ -12,7 +12,7 @@ export function esBot(userAgent?: string) {
   return !userAgent || BOTS.test(userAgent);
 }
 
-const MINUTOS_ENTRE_AVISOS = 10;
+const MINUTOS_ENTRE_AVISOS = 2;
 
 type DatosLectura = {
   idMascota: Types.ObjectId;
