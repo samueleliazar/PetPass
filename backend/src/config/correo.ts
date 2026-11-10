@@ -30,7 +30,8 @@ async function obtenerTransporter(): Promise<Transporter> {
 export async function enviarCorreo(para: string, asunto: string, html: string): Promise<void> {
   const t = await obtenerTransporter();
   const info = await t.sendMail({
-    from: '"PetPass" <no-reply@petpass.app>',
+        // Con Gmail el remitente debe ser la misma cuenta; con Ethereal se usa una dirección de ejemplo
+    from: `"PetPass" <${process.env.SMTP_USER ?? 'no-reply@petpass.app'}>`,
     to: para,
     subject: asunto,
     html,
