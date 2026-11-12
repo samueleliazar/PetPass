@@ -43,11 +43,11 @@
 | N8 | Abrir ficha con NFC (Android) | Teléfono **sin la app abierta** → acercar al sticker | Se abre el navegador con la ficha en < 2 s | B |✅ | |
 | N9 | Abrir ficha con NFC (iPhone) | iPhone de Samuel, pantalla desbloqueada → acercar al sticker | Notificación → abre la ficha | iPhone | | |
 | N10 | Escaneo registrado (HU25) | Tras N8 → 📡 Escaneos | Aparece un escaneo por NFC 📶 | B |✅ | |
-| N11 | Correo de aviso (HU25) | Logs de Cloud Run tras N8 | Aparece el enlace de Ethereal con el aviso | — | | |
-| N12 | Mismo chip en otra mascota | Otra cuenta → vincular leyendo el mismo sticker | Error (UID ya usado) | B | | |
-| N13 | Desvincular (HU19) | Desvincular → acercar el sticker | La ficha dice "Medalla no encontrada" | B | | |
-| N14 | Reemplazar | Vincular un sticker nuevo y grabarlo | El nuevo abre la ficha; el antiguo no | B | | |
-| N15 | Tarjeta que no es sticker | "Leer chip" con una tarjeta bancaria/TNE | Lee un UID o da error sin cerrarse la app | B | | |
+| N11 | Correo de aviso (HU25) | Logs de Cloud Run tras N8 | Aparece el enlace de Ethereal con el aviso | — | ✅| |
+| N12 | Mismo chip en otra mascota | Otra cuenta → vincular leyendo el mismo sticker | Error (UID ya usado) | B | ✅| |
+| N13 | Desvincular (HU19) | Desvincular → acercar el sticker | La ficha dice "Medalla no encontrada" | B | ✅| |
+| N14 | Reemplazar | Vincular un sticker nuevo y grabarlo | El nuevo abre la ficha; el antiguo no | B | ✅| |
+| N15 | Tarjeta que no es sticker | "Leer chip" con una tarjeta bancaria/TNE | Lee un UID o da error sin cerrarse la app | B | ✅| |
 | N16 | Teléfono sin NFC | Abrir 🏷️ Medalla en el build, en un teléfono sin NFC | No aparecen botones NFC y la app no se cae | A |✅ |No aparece nada relacionado al NFC y no se cae.|
 
 ## 1b. Notificaciones push (HU16, HU25)
